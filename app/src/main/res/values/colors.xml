@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="navy">#101F3B</color>
+    <color name="navy_light">#203F6B</color>
+    <color name="teal">#18B6A4</color>
+    <color name="blue">#3478F6</color>
+
+    <color name="background_light">#F5F7FB</color>
+    <color name="background_dark">#0B1426</color>
+
+    <color name="surface_light">#FFFFFF</color>
+    <color name="surface_dark">#192A45</color>
+
+    <color name="text_primary">#14243D</color>
+    <color name="text_secondary">#8290A5</color>
+
+    <color name="border_light">#E3EAF3</color>
+    <color name="income_green">#12B886</color>
+    <color name="expense_red">#F06464</color>
+    <color name="white">#FFFFFF</color>
+
+    <color name="phinova_primary">#102A4C</color>
+    <color name="phinova_primary_light">#245A96</color>
+    <color name="phinova_accent">#0891B2</color>
+
+    <color name="phinova_background">#F5F7FB</color>
+    <color name="phinova_surface">#FFFFFF</color>
+    <color name="phinova_border">#E8EDF5</color>
+
+    <color name="phinova_text_primary">#102A4C</color>
+    <color name="phinova_text_secondary">#64748B</color>
+    <color name="phinova_text_hint">#94A3B8</color>
+
+    <color name="phinova_income">#059669</color>
+    <color name="phinova_expense">#DC2626</color>
+    <color name="phinova_warning">#D97706</color>
+
+    <color name="phinova_income_bg">#DCFCE7</color>
+    <color name="phinova_expense_bg">#FEE2E2</color>
+    <color name="phinova_warning_bg">#FFF7ED</color>
+
+</resources>
