@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.qlchitieu.R;
 import com.example.qlchitieu.data.repository.TransactionRepository;
+import com.example.qlchitieu.data.sync.SyncManager;
 import com.example.qlchitieu.data.repository.WalletRepository;
 import com.example.qlchitieu.model.Wallet;
 import com.google.android.material.button.MaterialButton;
@@ -180,23 +181,20 @@ public class AddTransactionActivity extends AppCompatActivity {
 
         String uid = nguoiDung.getUid();
 
-        // 1) Hiện ngay từ SQLite (chưa cho lưu)
-        dangTaiVi = true;
+        // 1) Hiện ngay từ SQLite. SQLite là nguồn dữ liệu chính nên cho lưu luôn,
+        // không cần chờ mạng.
+        dangTaiVi = false;
         napDanhSachViTuSQLite(uid);
         capNhatNutLuu();
 
-        // 2) Tạm thời: kéo ví từ Firestore về để có số dư mới nhất (các màn hình
-        // sửa/xóa giao dịch vẫn ghi thẳng lên Firestore), rồi mới cho lưu.
-        // Mất mạng thì dùng dữ liệu đang có trên máy.
-        walletRepository.pullFromCloud(uid, (thanhCong, loi) -> {
+        // 2) Đồng bộ với Firestore ở nền (ví mới từ thiết bị khác...), xong thì nạp lại danh sách ví.
+        SyncManager.getInstance(this).syncNow((thanhCong, loi) -> {
 
             if (isFinishing() || isDestroyed()) {
                 return;
             }
 
             napDanhSachViTuSQLite(uid);
-
-            dangTaiVi = false;
             capNhatNutLuu();
 
             if (danhSachVi.isEmpty()) {

@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.qlchitieu.R;
 import com.example.qlchitieu.data.repository.BalanceAdjustmentRepository;
 import com.example.qlchitieu.data.repository.WalletRepository;
+import com.example.qlchitieu.data.sync.SyncManager;
 import com.example.qlchitieu.model.Wallet;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
@@ -110,13 +111,20 @@ public class AdjustBalanceActivity extends AppCompatActivity {
 
     private void taiThongTinVi() {
 
-        // 1) Hiện ngay thông tin ví từ SQLite (chưa cho bấm xác nhận)
+        // 1) Hiện ngay thông tin ví từ SQLite và cho phép điều chỉnh
+        // (SQLite là nguồn dữ liệu chính nên không cần chờ mạng)
         hienThiVi();
 
-        // 2) Tạm thời: kéo ví từ Firestore về để có số dư mới nhất
-        // (các màn hình giao dịch vẫn ghi số dư thẳng lên Firestore),
-        // rồi mới cho phép điều chỉnh. Mất mạng thì dùng số dư đang có trên máy.
-        walletRepository.pullFromCloud(uid, (thanhCong, loi) -> {
+        if (daTaiVi) {
+            btnXacNhanDieuChinh.setEnabled(true);
+        }
+
+        // 2) Đồng bộ với Firestore ở nền, xong thì hiện lại.
+        SyncManager.getInstance(this).syncNow((thanhCong, loi) -> {
+
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
 
             hienThiVi();
 

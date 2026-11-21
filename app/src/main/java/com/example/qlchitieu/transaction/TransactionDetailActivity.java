@@ -11,6 +11,7 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.example.qlchitieu.R;
 import com.example.qlchitieu.data.repository.TransactionRepository;
+import com.example.qlchitieu.data.sync.SyncManager;
 import com.example.qlchitieu.data.repository.WalletRepository;
 import com.example.qlchitieu.model.Transaction;
 import com.example.qlchitieu.model.Wallet;
@@ -144,8 +145,8 @@ public class TransactionDetailActivity extends AppCompatActivity {
             return;
         }
 
-        // 2) Chưa có trên máy (ví dụ giao dịch cũ chưa kéo về): kéo từ Firestore rồi đọc lại
-        transactionRepository.pullFromCloud(uid, (thanhCong, loi) -> {
+        // 2) Chưa có trên máy (ví dụ giao dịch cũ chưa kéo về): đồng bộ với Firestore rồi đọc lại
+        SyncManager.getInstance(this).syncNow((thanhCong, loi) -> {
 
             if (isFinishing() || isDestroyed()) {
                 return;

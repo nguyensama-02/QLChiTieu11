@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.qlchitieu.R;
 import com.example.qlchitieu.adapter.TransactionAdapter;
 import com.example.qlchitieu.data.repository.TransactionRepository;
+import com.example.qlchitieu.data.sync.SyncManager;
 import com.example.qlchitieu.model.Transaction;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.firebase.auth.FirebaseAuth;
@@ -121,17 +122,15 @@ public class TransactionHistoryActivity extends AppCompatActivity {
         // 1) Hiện ngay từ SQLite
         hienThiTuSQLite(uid);
 
-        // 2) Tạm thời: kéo giao dịch từ Firestore về rồi hiện lại.
+        // 2) Đồng bộ với Firestore ở nền, xong thì hiện lại.
         // Mất mạng thì bỏ qua, vẫn dùng dữ liệu đang có trên máy.
-        transactionRepository.pullFromCloud(uid, (thanhCong, loi) -> {
+        SyncManager.getInstance(this).syncNow((thanhCong, loi) -> {
 
             if (isFinishing() || isDestroyed()) {
                 return;
             }
 
-            if (thanhCong) {
-                hienThiTuSQLite(uid);
-            }
+            hienThiTuSQLite(uid);
         });
     }
 

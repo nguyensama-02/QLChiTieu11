@@ -8,7 +8,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import com.example.qlchitieu.profile.ProfileActivity;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -18,7 +18,7 @@ import com.example.qlchitieu.adapter.TransactionAdapter;
 import com.example.qlchitieu.auth.LoginActivity;
 import com.example.qlchitieu.budget.BudgetActivity;
 import com.example.qlchitieu.data.repository.BudgetRepository;
-import com.example.qlchitieu.data.repository.LegacyPull;
+import com.example.qlchitieu.data.sync.SyncManager;
 import com.example.qlchitieu.data.repository.TransactionRepository;
 import com.example.qlchitieu.data.repository.WalletRepository;
 import com.example.qlchitieu.model.Budget;
@@ -30,8 +30,10 @@ import com.example.qlchitieu.util.MonthRange;
 import com.example.qlchitieu.wallet.WalletActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
-
+import android.graphics.Bitmap;
+import android.widget.ImageView;
+import com.example.qlchitieu.data.repository.UserProfileRepository;
+import com.example.qlchitieu.profile.AvatarStore;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -58,8 +60,8 @@ public class MainActivity extends AppCompatActivity {
 
     FirebaseAuth firebaseAuth;
 
-    // Firestore chỉ còn dùng để đọc hồ sơ người dùng (họ tên)
-    FirebaseFirestore firestore;
+    UserProfileRepository userProfileRepository;
+    ImageView btnHoSoHeader;
 
     WalletRepository walletRepository;
     TransactionRepository transactionRepository;
@@ -85,13 +87,14 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        firestore = FirebaseFirestore.getInstance();
+        userProfileRepository = new UserProfileRepository(this);
 
         walletRepository = new WalletRepository(this);
         transactionRepository = new TransactionRepository(this);
         budgetRepository = new BudgetRepository(this);
 
         tvTenNguoiDung = findViewById(R.id.tvTenNguoiDung);
+        btnHoSoHeader = findViewById(R.id.btnHoSoHeader);
         tvTongSoDu = findViewById(R.id.tvTongSoDu);
 
         findViewById(R.id.cardTongSoDu).setOnClickListener(v -> {
@@ -149,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
 
         layoutCanhBaoNganSach.setVisibility(View.GONE);
 
-        taiThongTinNguoiDung(nguoiDung.getUid());
+        hienHoSo(nguoiDung.getUid());
 
         tvXemTatCa.setOnClickListener(v -> {
             startActivity(new Intent(
@@ -186,13 +189,18 @@ public class MainActivity extends AppCompatActivity {
                     AddTransactionActivity.class
             ));
         });
+        View.OnClickListener moCaNhan = v ->
+                startActivity(new Intent(this, ProfileActivity.class));
+
+        findViewById(R.id.navCaNhan).setOnClickListener(moCaNhan);
+        findViewById(R.id.btnHoSoHeader).setOnClickListener(moCaNhan);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        if (firestore == null) {
+        if (userProfileRepository == null) {
             return;
         }
 
@@ -206,18 +214,20 @@ public class MainActivity extends AppCompatActivity {
 
         // 1) Hiện ngay từ SQLite
         taiDuLieuTuSQLite(uid);
+        hienHoSo(uid);
 
         // 2) Tạm thời: kéo dữ liệu từ Firestore về rồi hiện lại.
         // Mất mạng thì bỏ qua, vẫn dùng dữ liệu đang có trên máy.
         int lanHienTai = ++lanDongBo;
 
-        LegacyPull.pullAll(this, uid, (thanhCong, loi) -> {
+        SyncManager.getInstance(this).syncNow((thanhCong, loi) -> {
 
             if (isFinishing() || isDestroyed() || lanHienTai != lanDongBo) {
                 return;
             }
 
             taiDuLieuTuSQLite(uid);
+            hienHoSo(uid);
         });
     }
 
@@ -235,24 +245,28 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void taiThongTinNguoiDung(String uid) {
+    /** Hiện họ tên đã lưu trên máy và ảnh đại diện (nếu có) ở đầu trang. */
+    private void hienHoSo(String uid) {
 
-        firestore.collection("users")
-                .document(uid)
-                .get()
-                .addOnSuccessListener(document -> {
+        String hoTen = userProfileRepository.getHoTen(uid);
 
-                    if (document.exists()) {
-                        String hoTen = document.getString("hoTen");
+        if (hoTen != null) {
+            tvTenNguoiDung.setText(hoTen);
+        }
 
-                        if (hoTen != null && !hoTen.trim().isEmpty()) {
-                            tvTenNguoiDung.setText(hoTen);
-                        }
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    thongBao("Không thể tải thông tin người dùng");
-                });
+        Bitmap anh = AvatarStore.tai(this, uid);
+
+        if (anh != null) {
+            btnHoSoHeader.setPadding(0, 0, 0, 0);
+            btnHoSoHeader.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            btnHoSoHeader.setClipToOutline(true);
+            btnHoSoHeader.setImageBitmap(anh);
+        } else {
+            int le = (int) (11 * getResources().getDisplayMetrics().density);
+            btnHoSoHeader.setPadding(le, le, le, le);
+            btnHoSoHeader.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            btnHoSoHeader.setImageResource(R.drawable.ic_user);
+        }
     }
 
     private void taiTongSoDu(String uid) {

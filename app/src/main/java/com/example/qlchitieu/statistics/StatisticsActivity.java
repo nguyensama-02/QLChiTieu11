@@ -10,7 +10,7 @@ import android.widget.Toast;
 
 import com.example.qlchitieu.R;
 import com.example.qlchitieu.auth.LoginActivity;
-import com.example.qlchitieu.data.repository.LegacyPull;
+import com.example.qlchitieu.data.sync.SyncManager;
 import com.example.qlchitieu.data.repository.TransactionRepository;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.data.PieData;
@@ -198,11 +198,11 @@ public class StatisticsActivity extends AppCompatActivity {
         // 1) Hiện ngay từ SQLite
         hienThiThongKeTuSQLite(uid);
 
-        // 2) Tạm thời: kéo dữ liệu từ Firestore về rồi hiện lại.
+        // 2) Đồng bộ với Firestore ở nền, xong thì hiện lại.
         // Mất mạng thì bỏ qua, vẫn dùng dữ liệu đang có trên máy.
         int lanHienTai = ++lanDongBo;
 
-        LegacyPull.pullAll(this, uid, (thanhCong, loi) -> {
+        SyncManager.getInstance(this).syncNow((thanhCong, loi) -> {
 
             if (isFinishing() || isDestroyed() || lanHienTai != lanDongBo) {
                 return;
@@ -449,4 +449,3 @@ public class StatisticsActivity extends AppCompatActivity {
     }
 
 }
-

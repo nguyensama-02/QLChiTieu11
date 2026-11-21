@@ -16,7 +16,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class PhinovaDbHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "phinova.db";
-    private static final int DB_VERSION = 3;
+    private static final int DB_VERSION = 4;
 
     // ----- Tên bảng -----
     public static final String T_WALLETS = "wallets";
@@ -24,6 +24,7 @@ public class PhinovaDbHelper extends SQLiteOpenHelper {
     public static final String T_BUDGETS = "budgets";
     public static final String T_ADJUSTMENTS = "balance_adjustments";
     public static final String T_TX_EDITS = "transaction_edits";
+    public static final String T_USER_PROFILES = "user_profiles";
 
     // ----- Cột dùng chung -----
     public static final String C_USER_ID = "user_id";
@@ -86,6 +87,11 @@ public class PhinovaDbHelper extends SQLiteOpenHelper {
     public static final String E_NGAY_MOI = "ngay_giao_dich_moi";
     public static final String E_NGAY_SUA = "ngay_chinh_sua";
 
+    // ----- user_profiles (hồ sơ người dùng; khóa chính là user_id = UID Firebase) -----
+    public static final String P_HO_TEN = "ho_ten";
+    public static final String P_EMAIL = "email";
+    public static final String P_NGAY_TAO = "ngay_tao";
+
     // Cột đồng bộ, chèn vào cuối mỗi bảng
     private static final String SYNC_COLUMNS =
             C_SYNC_STATUS + " TEXT NOT NULL DEFAULT 'PENDING', " +
@@ -145,6 +151,7 @@ public class PhinovaDbHelper extends SQLiteOpenHelper {
                 SYNC_COLUMNS + ")");
 
         taoBangChinhSua(db);
+        taoBangHoSo(db);
 
         // Index cho các truy vấn thường dùng
         db.execSQL("CREATE INDEX idx_wallets_user ON " + T_WALLETS + "(" + C_USER_ID + ")");
@@ -195,6 +202,16 @@ public class PhinovaDbHelper extends SQLiteOpenHelper {
                 SYNC_COLUMNS + ")");
     }
 
+    /** Hồ sơ người dùng: mỗi tài khoản một dòng, khóa chính chính là user_id. */
+    private void taoBangHoSo(SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + T_USER_PROFILES + " (" +
+                C_USER_ID + " TEXT PRIMARY KEY, " +
+                P_HO_TEN + " TEXT, " +
+                P_EMAIL + " TEXT, " +
+                P_NGAY_TAO + " INTEGER, " +
+                SYNC_COLUMNS + ")");
+    }
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // Nâng cấp từng bước, giữ nguyên dữ liệu đang có.
@@ -206,6 +223,9 @@ public class PhinovaDbHelper extends SQLiteOpenHelper {
             // không làm mất dữ liệu.
             db.execSQL("DROP TABLE IF EXISTS " + T_BUDGETS);
             taoBangNganSach(db);
+        }
+        if (oldVersion < 4) {
+            taoBangHoSo(db);
         }
     }
 }

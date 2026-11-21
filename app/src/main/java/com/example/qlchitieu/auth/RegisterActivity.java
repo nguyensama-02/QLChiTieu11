@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.qlchitieu.R;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.example.qlchitieu.data.repository.UserProfileRepository;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +23,7 @@ public class RegisterActivity extends AppCompatActivity {
     MaterialButton btnDangKy;
 
     FirebaseAuth firebaseAuth;
-    FirebaseFirestore firestore;
+    UserProfileRepository userProfileRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +37,7 @@ public class RegisterActivity extends AppCompatActivity {
         btnDangKy = findViewById(R.id.btnDangKy);
 
         firebaseAuth = FirebaseAuth.getInstance();
-        firestore = FirebaseFirestore.getInstance();
+        userProfileRepository = new UserProfileRepository(this);
 
         caiDatHienAnMatKhau(edtMatKhau);
         caiDatHienAnMatKhau(edtXacNhanMatKhau);
@@ -99,36 +99,15 @@ public class RegisterActivity extends AppCompatActivity {
 
                     String uid = firebaseAuth.getCurrentUser().getUid();
 
-                    Map<String, Object> nguoiDung = new HashMap<>();
-                    nguoiDung.put("uid", uid);
-                    nguoiDung.put("hoTen", hoTen);
-                    nguoiDung.put("email", email);
-                    nguoiDung.put("ngayTao",
-                            com.google.firebase.firestore.FieldValue.serverTimestamp());
+                    // Lưu hồ sơ vào SQLite, SyncManager sẽ đưa lên Firestore (kể cả khi mất mạng lúc này)
+                    userProfileRepository.taoHoSo(uid, hoTen, email);
 
-                    firestore.collection("users")
-                            .document(uid)
-                            .set(nguoiDung)
-                            .addOnSuccessListener(unused -> {
+                    Toast.makeText(this,
+                            "Đăng ký tài khoản thành công!",
+                            Toast.LENGTH_LONG).show();
 
-                                Toast.makeText(this,
-                                        "Đăng ký tài khoản thành công!",
-                                        Toast.LENGTH_LONG).show();
-
-                                btnDangKy.setEnabled(true);
-                                btnDangKy.setText("ĐĂNG KÝ");
-
-                            })
-                            .addOnFailureListener(e -> {
-
-                                btnDangKy.setEnabled(true);
-                                btnDangKy.setText("ĐĂNG KÝ");
-
-                                Toast.makeText(this,
-                                        "Đã tạo tài khoản nhưng chưa lưu được hồ sơ: "
-                                                + e.getMessage(),
-                                        Toast.LENGTH_LONG).show();
-                            });
+                    btnDangKy.setEnabled(true);
+                    btnDangKy.setText("ĐĂNG KÝ");
                 });
     }
 

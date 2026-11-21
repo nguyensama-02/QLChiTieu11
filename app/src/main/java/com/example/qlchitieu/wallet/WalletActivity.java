@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.qlchitieu.R;
 import com.example.qlchitieu.data.repository.WalletRepository;
+import com.example.qlchitieu.data.sync.SyncManager;
 import com.example.qlchitieu.model.Wallet;
 import com.example.qlchitieu.adapter.WalletAdapter;
 import com.google.android.material.button.MaterialButton;
@@ -126,15 +127,17 @@ public class WalletActivity extends AppCompatActivity {
         tatCaVi.addAll(walletRepository.getWallets(uid));
         locDanhSachVi();
 
-        // 2) Tạm thời: kéo từ Firestore về rồi hiện lại
-        walletRepository.pullFromCloud(uid, (thanhCong, loi) -> {
-            if (thanhCong) {
-                tatCaVi.clear();
-                tatCaVi.addAll(walletRepository.getWallets(uid));
-                locDanhSachVi();
-            } else {
-                Toast.makeText(this, "Không thể đồng bộ: " + loi, Toast.LENGTH_LONG).show();
+        // 2) Đồng bộ với Firestore ở nền, xong thì hiện lại.
+        // Dù đồng bộ thành công hay không (ví dụ mất mạng), luôn hiện lại dữ liệu trên máy.
+        SyncManager.getInstance(this).syncNow((thanhCong, loi) -> {
+
+            if (isFinishing() || isDestroyed()) {
+                return;
             }
+
+            tatCaVi.clear();
+            tatCaVi.addAll(walletRepository.getWallets(uid));
+            locDanhSachVi();
         });
     }
 

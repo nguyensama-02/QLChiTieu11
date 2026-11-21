@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.qlchitieu.R;
 import com.example.qlchitieu.data.repository.WalletRepository;
+import com.example.qlchitieu.data.sync.SyncManager;
 import com.example.qlchitieu.model.Wallet;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
@@ -134,12 +135,16 @@ public class WalletDetailActivity extends AppCompatActivity {
 
     private void taiChiTietVi() {
 
-        // 1) Hiện ngay từ SQLite
+        // 1) Hiện ngay từ SQLite và cho phép thao tác
+        // (SQLite là nguồn dữ liệu chính nên không cần chờ mạng)
         hienThiChiTiet();
 
-        // 2) Tạm thời: kéo ví từ Firestore về (các màn hình giao dịch vẫn ghi
-        // thẳng lên Firestore), rồi hiện lại và mới cho phép thao tác.
-        walletRepository.pullFromCloud(uid, (thanhCong, loi) -> {
+        if (daTaiVi) {
+            capNhatNut();
+        }
+
+        // 2) Đồng bộ với Firestore ở nền, xong thì hiện lại.
+        SyncManager.getInstance(this).syncNow((thanhCong, loi) -> {
 
             if (isFinishing() || isDestroyed()) {
                 return;

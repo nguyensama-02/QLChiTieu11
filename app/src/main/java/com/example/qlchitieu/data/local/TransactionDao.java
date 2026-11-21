@@ -180,7 +180,21 @@ public class TransactionDao {
         }
         return list;
     }
+    /** Ví này đã có giao dịch (chưa xóa) nào dùng làm ví nguồn hoặc ví nhận chưa? */
+    public boolean existsForWallet(String userId, String maVi) {
+        SQLiteDatabase db = helper.getReadableDatabase();
 
+        try (Cursor c = db.query(
+                PhinovaDbHelper.T_TRANSACTIONS,
+                new String[]{PhinovaDbHelper.TX_ID},
+                PhinovaDbHelper.C_USER_ID + "=? AND " + PhinovaDbHelper.C_IS_DELETED + "=0 AND ("
+                        + PhinovaDbHelper.TX_VI_NGUON + "=? OR " + PhinovaDbHelper.TX_VI_DICH + "=?)",
+                new String[]{userId, maVi, maVi},
+                null, null, null, "1")) {
+
+            return c.moveToFirst();
+        }
+    }
     /** Giao dịch đã đẩy lên cloud thành công; ví liên quan cũng đã khớp với cloud. */
     public void markSynced(String maGiaoDich, String maViNguon, String maViDich) {
         SQLiteDatabase db = helper.getWritableDatabase();

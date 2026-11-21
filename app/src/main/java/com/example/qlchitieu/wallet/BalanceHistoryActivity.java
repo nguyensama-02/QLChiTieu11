@@ -14,6 +14,7 @@ import com.example.qlchitieu.R;
 import com.example.qlchitieu.adapter.BalanceAdjustmentAdapter;
 import com.example.qlchitieu.data.repository.BalanceAdjustmentRepository;
 import com.example.qlchitieu.data.repository.WalletRepository;
+import com.example.qlchitieu.data.sync.SyncManager;
 import com.example.qlchitieu.model.BalanceAdjustment;
 import com.example.qlchitieu.model.Wallet;
 import com.google.firebase.auth.FirebaseAuth;
@@ -112,10 +113,10 @@ public class BalanceHistoryActivity extends AppCompatActivity {
         // 1) Hiện ngay từ SQLite
         hienThiLichSu();
 
-        // 2) Tạm thời: kéo từ Firestore về rồi hiện lại.
+        // 2) Đồng bộ với Firestore ở nền, xong thì hiện lại.
         // Mất mạng thì bỏ qua, vẫn dùng dữ liệu đang có trên máy.
-        adjustmentRepository.pullFromCloud(uid, maVi, (thanhCong, loi) -> {
-            if (thanhCong) {
+        SyncManager.getInstance(this).syncNow((thanhCong, loi) -> {
+            if (!isFinishing() && !isDestroyed()) {
                 hienThiLichSu();
             }
         });

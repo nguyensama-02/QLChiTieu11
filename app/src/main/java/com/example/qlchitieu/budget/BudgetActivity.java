@@ -17,7 +17,7 @@ import com.example.qlchitieu.model.Budget;
 import com.example.qlchitieu.adapter.BudgetAdapter;
 import com.example.qlchitieu.R;
 import com.example.qlchitieu.data.repository.BudgetRepository;
-import com.example.qlchitieu.data.repository.LegacyPull;
+import com.example.qlchitieu.data.sync.SyncManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -196,11 +196,11 @@ public class BudgetActivity extends AppCompatActivity {
         // 1) Hiện ngay từ SQLite
         hienThiTuSQLite(uid);
 
-        // 2) Tạm thời: kéo dữ liệu từ Firestore về rồi hiện lại.
+        // 2) Đồng bộ với Firestore ở nền, xong thì hiện lại.
         // Mất mạng thì bỏ qua, vẫn dùng dữ liệu đang có trên máy.
         int lanTaiHienTai = ++lanTaiDuLieu;
 
-        LegacyPull.pullAll(this, uid, (thanhCong, loi) -> {
+        SyncManager.getInstance(this).syncNow((thanhCong, loi) -> {
 
             if (isFinishing() || isDestroyed()
                     || lanTaiHienTai != lanTaiDuLieu) {

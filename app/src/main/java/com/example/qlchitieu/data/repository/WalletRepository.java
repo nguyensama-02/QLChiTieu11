@@ -3,27 +3,23 @@ package com.example.qlchitieu.data.repository;
 import android.content.Context;
 
 import com.example.qlchitieu.data.local.BalanceAdjustmentDao;
+import com.example.qlchitieu.data.local.TransactionDao;
 import com.example.qlchitieu.data.local.WalletDao;
+import com.example.qlchitieu.data.sync.SyncManager;
 import com.example.qlchitieu.model.Wallet;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.Source;
 
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Activity chỉ gọi lớp này, không gọi Firestore hay SQLite trực tiếp.
  *
- * Đây là bản CHUYỂN TIẾP: ghi SQLite trước, rồi đẩy luôn lên Firestore bằng cùng ID.
- * Khi viết xong SyncManager, phần đẩy lên cloud sẽ chuyển sang SyncManager.
+ * Mọi thao tác chỉ ghi vào SQLite (đánh dấu PENDING) rồi nhờ SyncManager đẩy lên Firestore
+ * ở phía sau, nên dùng được cả khi offline.
  */
 public class WalletRepository {
 
@@ -42,14 +38,23 @@ public class WalletRepository {
             "Ví đã có giao dịch hoặc lịch sử điều chỉnh số dư.\n\n"
                     + "Hãy sử dụng chức năng Lưu trữ ví để giữ lại dữ liệu tài chính.";
 
+    private final Context appContext;
     private final WalletDao dao;
+    private final TransactionDao transactionDao;
     private final BalanceAdjustmentDao adjustmentDao;
     private final FirebaseFirestore firestore;
 
     public WalletRepository(Context context) {
+        appContext = context.getApplicationContext();
         dao = new WalletDao(context);
+        transactionDao = new TransactionDao(context);
         adjustmentDao = new BalanceAdjustmentDao(context);
         firestore = FirebaseFirestore.getInstance();
+    }
+
+    /** Nhờ SyncManager đẩy các thay đổi PENDING lên cloud (chạy nền). */
+    private void dongBo() {
+        SyncManager.getInstance(appContext).syncNow();
     }
 
     private CollectionReference walletsOf(String userId) {
@@ -81,30 +86,15 @@ public class WalletRepository {
         }
 
         callback.onDone(true, null);
-        pushWallet(userId, vi, now);
-    }
-
-    private void pushWallet(String userId, Wallet vi, long ngayTao) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("tenVi", vi.getTenVi());
-        map.put("loaiVi", vi.getLoaiVi());
-        map.put("soDu", vi.getSoDu());
-        map.put("trangThai", vi.getTrangThai());
-        map.put("ngayTao", new Timestamp(new Date(ngayTao)));
-        map.put("ngayLuuTru", null);
-
-        walletsOf(userId).document(vi.getMaVi())
-                .set(map)
-                .addOnSuccessListener(unused -> dao.markSynced(vi.getMaVi()));
-        // Thất bại: ví vẫn ở trạng thái PENDING. Việc thử lại sẽ do SyncManager đảm nhiệm.
+        dongBo();
     }
 
     /**
-     * TẠM THỜI: kéo ví từ Firestore về SQLite để các ví cũ (tạo trước khi có SQLite)
-     * và các thay đổi từ màn hình chưa chuyển sang Repository được cập nhật.
+     * Kéo ví từ Firestore về SQLite (do SyncManager gọi). Ví đang PENDING trên máy được giữ nguyên.
+     * Dùng Source.SERVER nên khi offline sẽ thất bại và không đổi gì ở máy.
      */
     public void pullFromCloud(String userId, Callback callback) {
-        walletsOf(userId).get()
+        walletsOf(userId).get(Source.SERVER)
                 .addOnSuccessListener(snapshot -> {
                     for (QueryDocumentSnapshot doc : snapshot) {
 
@@ -162,18 +152,7 @@ public class WalletRepository {
         }
 
         callback.onDone(true, null);
-
-        // Chỉ gửi 2 trường đã đổi (không gửi soDu để không ghi đè số dư mà
-        // các màn hình chưa chuyển sang SQLite vừa cập nhật trên cloud).
-        // update() sẽ thất bại nếu document chưa có trên cloud -> ví giữ PENDING,
-        // SyncManager sau này sẽ đẩy cả ví lên.
-        Map<String, Object> map = new HashMap<>();
-        map.put("tenVi", tenVi);
-        map.put("loaiVi", loaiVi);
-
-        walletsOf(userId).document(maVi)
-                .update(map)
-                .addOnSuccessListener(unused -> dao.markSynced(maVi));
+        dongBo();
     }
 
     /**
@@ -191,22 +170,14 @@ public class WalletRepository {
             return;
         }
 
-        Map<String, Object> map = new HashMap<>();
-        map.put("trangThai", dangLuuTru ? "HOAT_DONG" : "LUU_TRU");
-        map.put("ngayLuuTru", dangLuuTru ? null : new Timestamp(new Date(now)));
-
-        walletsOf(userId).document(maVi)
-                .update(map)
-                .addOnSuccessListener(unused -> dao.markSynced(maVi));
-
         callback.onDone(true, null);
+        dongBo();
     }
 
     /**
      * Kiểm tra ví có được xóa không: số dư phải bằng 0 và chưa có giao dịch / điều chỉnh nào.
-     *
-     * TẠM THỜI: giao dịch chưa chuyển sang SQLite nên phải hỏi Firestore (cần mạng).
-     * Sau khi chuyển xong nhóm giao dịch, phần này đổi sang kiểm tra bằng SQLite.
+     * Kiểm tra hoàn toàn bằng SQLite nên dùng được cả khi offline và luôn thấy giao dịch
+     * vừa tạo (kể cả khi chưa kịp đẩy lên cloud).
      */
     public void checkCanDelete(String userId, String maVi, DeleteCheckCallback callback) {
 
@@ -222,43 +193,18 @@ public class WalletRepository {
             return;
         }
 
-        if (adjustmentDao.existsForWallet(userId, maVi)) {
+        if (adjustmentDao.existsForWallet(userId, maVi)
+                || transactionDao.existsForWallet(userId, maVi)) {
             callback.onRefused(MSG_CO_LICH_SU);
             return;
         }
 
-        CollectionReference giaoDichRef = firestore.collection("users")
-                .document(userId).collection("transactions");
-
-        CollectionReference dieuChinhRef = firestore.collection("users")
-                .document(userId).collection("balance_adjustments");
-
-        Task<QuerySnapshot> giaoDichNguon = giaoDichRef
-                .whereEqualTo("maViNguon", maVi).limit(1).get(Source.SERVER);
-
-        Task<QuerySnapshot> giaoDichDich = giaoDichRef
-                .whereEqualTo("maViDich", maVi).limit(1).get(Source.SERVER);
-
-        Task<QuerySnapshot> lichSuDieuChinh = dieuChinhRef
-                .whereEqualTo("maVi", maVi).limit(1).get(Source.SERVER);
-
-        Tasks.whenAllSuccess(giaoDichNguon, giaoDichDich, lichSuDieuChinh)
-                .addOnSuccessListener(ketQua -> {
-                    if (!giaoDichNguon.getResult().isEmpty()
-                            || !giaoDichDich.getResult().isEmpty()
-                            || !lichSuDieuChinh.getResult().isEmpty()) {
-                        callback.onRefused(MSG_CO_LICH_SU);
-                    } else {
-                        callback.onOk();
-                    }
-                })
-                .addOnFailureListener(e ->
-                        callback.onError("Không thể kiểm tra lịch sử: " + e.getMessage()));
+        callback.onOk();
     }
 
     /**
-     * Xóa ví: ẩn khỏi SQLite ngay (xóa mềm), xóa trên Firestore, xong thì xóa hẳn dòng ở SQLite.
-     * Nếu xóa cloud thất bại, ví vẫn ẩn và giữ PENDING để SyncManager xử lý sau.
+     * Xóa ví: xóa mềm ở SQLite (ẩn khỏi app ngay). SyncManager sẽ xóa trên Firestore,
+     * xong mới xóa hẳn dòng ở SQLite; nếu thất bại thì ví vẫn ẩn và giữ PENDING để thử lại.
      */
     public void deleteWallet(String userId, String maVi, Callback callback) {
 
@@ -276,10 +222,7 @@ public class WalletRepository {
             return;
         }
 
-        walletsOf(userId).document(maVi)
-                .delete()
-                .addOnSuccessListener(unused -> dao.purge(maVi));
-
         callback.onDone(true, null);
+        dongBo();
     }
 }
