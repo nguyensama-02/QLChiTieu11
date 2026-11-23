@@ -43,7 +43,7 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     TextView tvTenNguoiDung, tvTongSoDu, tvThuNhap, tvChiTieu;
-    TextView navViTien, navGiaoDich;
+    View navViTien, navGiaoDich;
 
     RecyclerView rvGiaoDichGanDay;
     LinearLayout layoutGiaoDichTrong;
@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
                 findViewById(R.id.tvXemNganSach);
 
         TextView tvXemTatCa = findViewById(R.id.tvXemTatCa);
-        TextView navThongKe = findViewById(R.id.navThongKe);
+        View navThongKe = findViewById(R.id.navThongKe);
 
         danhSachGiaoDich = new ArrayList<>();
 
