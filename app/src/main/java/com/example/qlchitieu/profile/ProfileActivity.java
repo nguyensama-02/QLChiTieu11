@@ -1,5 +1,6 @@
 package com.example.qlchitieu.profile;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -7,6 +8,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.format.DateUtils;
 import android.view.View;
@@ -14,6 +17,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
@@ -23,13 +28,25 @@ import com.example.qlchitieu.auth.LoginActivity;
 import com.example.qlchitieu.data.local.PhinovaDbHelper;
 import com.example.qlchitieu.data.local.SyncDao;
 import com.example.qlchitieu.data.repository.UserProfileRepository;
+import com.example.qlchitieu.data.repository.TransactionRepository;
+import com.example.qlchitieu.data.repository.WalletRepository;
 import com.example.qlchitieu.data.sync.SyncManager;
+import com.example.qlchitieu.model.Transaction;
+import com.example.qlchitieu.model.Wallet;
+import com.example.qlchitieu.security.AppLock;
+import com.example.qlchitieu.security.SecurityActivity;
+import com.example.qlchitieu.util.CsvExporter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Trang Cá nhân: hồ sơ, trạng thái đồng bộ, các tùy chỉnh và đăng xuất.
@@ -46,6 +63,16 @@ public class ProfileActivity extends AppCompatActivity {
 
     private static final String MAU_XANH = "#059669";
     private static final String MAU_CAM = "#D97706";
+
+    /** Mở hộp thoại hệ thống để người dùng chọn nơi lưu file CSV (không cần xin quyền). */
+    private final ActivityResultLauncher<String> chonNoiLuuFile =
+            registerForActivityResult(
+                    new ActivityResultContracts.CreateDocument("text/csv"),
+                    uri -> {
+                        if (uri != null) {
+                            xuatRaFile(uri);
+                        }
+                    });
 
     FirebaseAuth firebaseAuth;
     UserProfileRepository userProfileRepository;
@@ -97,9 +124,9 @@ public class ProfileActivity extends AppCompatActivity {
         findViewById(R.id.btnSuaHoSo).setOnClickListener(moSuaHoSo);
         findViewById(R.id.rowDanhMuc).setOnClickListener(sapCo);
         findViewById(R.id.rowGiaoDien).setOnClickListener(sapCo);
-        findViewById(R.id.rowBaoMat).setOnClickListener(sapCo);
-        findViewById(R.id.rowXuatDuLieu).setOnClickListener(sapCo);
-        findViewById(R.id.rowGopY).setOnClickListener(sapCo);
+        findViewById(R.id.rowBaoMat).setOnClickListener(v -> moManBaoMat());
+        findViewById(R.id.rowXuatDuLieu).setOnClickListener(v -> batDauXuatDuLieu());
+        findViewById(R.id.rowGopY).setOnClickListener(v -> moEmailGopY());
         findViewById(R.id.tvXoaTaiKhoan).setOnClickListener(sapCo);
 
         // Công tắc chưa làm: bấm vào thì trả về trạng thái tắt
@@ -109,7 +136,13 @@ public class ProfileActivity extends AppCompatActivity {
         };
 
         switchNhacNho.setOnClickListener(congTacSapCo);
-        switchKhoaUngDung.setOnClickListener(congTacSapCo);
+
+        // Công tắc Khóa ứng dụng chỉ hiển thị trạng thái; bật/tắt (cần xác thực) ở màn Bảo mật
+        switchKhoaUngDung.setOnClickListener(v -> {
+            ((SwitchCompat) v).setChecked(AppLock.isEnabled(this, nguoiDung.getUid()));
+            moManBaoMat();
+        });
+        findViewById(R.id.rowKhoaUngDung).setOnClickListener(v -> moManBaoMat());
 
         findViewById(R.id.tvDongBoNgay).setOnClickListener(v -> dongBoNgay());
         btnDangXuat.setOnClickListener(v -> hoiXacNhanDangXuat());
@@ -139,6 +172,9 @@ public class ProfileActivity extends AppCompatActivity {
 
         hienAvatar(nguoiDung.getUid());
         capNhatTrangThaiDongBo(nguoiDung.getUid());
+
+        // Khóa ứng dụng có thể vừa được bật/tắt ở màn Bảo mật
+        switchKhoaUngDung.setChecked(AppLock.isEnabled(this, nguoiDung.getUid()));
     }
 
     // ------------------------------------------------------------------
@@ -206,6 +242,10 @@ public class ProfileActivity extends AppCompatActivity {
         Intent intent = new Intent(this, EditProfileActivity.class);
         intent.putExtra(EditProfileActivity.EXTRA_HO_TEN, tvHoTen.getText().toString());
         startActivity(intent);
+    }
+
+    private void moManBaoMat() {
+        startActivity(new Intent(this, SecurityActivity.class));
     }
 
     /** Hiện ảnh đại diện đã lưu trên máy, chưa có thì hiện chữ cái đầu của tên. */
@@ -413,6 +453,123 @@ public class ProfileActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+    }
+
+    // ------------------------------------------------------------------
+    //  Xuất dữ liệu ra file CSV
+    // ------------------------------------------------------------------
+
+    private void batDauXuatDuLieu() {
+
+        if (firebaseAuth.getCurrentUser() == null) {
+            thongBao("Vui lòng đăng nhập lại");
+            return;
+        }
+
+        String tenFile = "Phinova_giao_dich_"
+                + new SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(new Date())
+                + ".csv";
+
+        try {
+            chonNoiLuuFile.launch(tenFile);
+        } catch (Exception e) {
+            thongBao("Máy không hỗ trợ chọn nơi lưu file");
+        }
+    }
+
+    /** Đọc giao dịch từ SQLite và ghi vào file người dùng đã chọn (chạy ở luồng nền). */
+    private void xuatRaFile(Uri uri) {
+
+        FirebaseUser nguoiDung = firebaseAuth.getCurrentUser();
+
+        if (nguoiDung == null) {
+            thongBao("Vui lòng đăng nhập lại");
+            return;
+        }
+
+        String uid = nguoiDung.getUid();
+        Context appContext = getApplicationContext();
+
+        thongBao("Đang xuất dữ liệu...");
+
+        new Thread(() -> {
+            String loi = null;
+            int soGiaoDich = 0;
+
+            try {
+                List<Transaction> giaoDich =
+                        new TransactionRepository(appContext).getTransactions(uid);
+
+                Map<String, String> tenVi = new HashMap<>();
+
+                for (Wallet vi : new WalletRepository(appContext).getWallets(uid)) {
+                    tenVi.put(vi.getMaVi(), vi.getTenVi());
+                }
+
+                try (OutputStream out = appContext.getContentResolver().openOutputStream(uri)) {
+
+                    if (out == null) {
+                        throw new IOException("Không mở được file để ghi");
+                    }
+
+                    CsvExporter.xuatGiaoDich(out, giaoDich, tenVi);
+                }
+
+                soGiaoDich = giaoDich.size();
+
+            } catch (Exception e) {
+                loi = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            }
+
+            String loiCuoi = loi;
+            int soLuong = soGiaoDich;
+
+            runOnUiThread(() -> {
+                if (loiCuoi != null) {
+                    thongBao("Không thể xuất dữ liệu: " + loiCuoi);
+                } else if (soLuong == 0) {
+                    thongBao("Đã tạo file, nhưng chưa có giao dịch nào để xuất");
+                } else {
+                    thongBao("Đã xuất " + soLuong + " giao dịch");
+                }
+            });
+        }).start();
+    }
+
+    /** Địa chỉ email nhận góp ý và báo lỗi. */
+    private static final String EMAIL_GOP_Y = "nguyensama02@gmail.com";
+
+    /**
+     * Mở ứng dụng email của máy với sẵn người nhận, tiêu đề và thông tin thiết bị
+     * (phiên bản app, Android, tên máy) để dễ tìm lỗi. Người dùng đọc và sửa trước khi gửi.
+     */
+    private void moEmailGopY() {
+
+        FirebaseUser nguoiDung = firebaseAuth.getCurrentUser();
+
+        String taiKhoan = nguoiDung != null && nguoiDung.getEmail() != null
+                ? nguoiDung.getEmail()
+                : "Không rõ";
+
+        String noiDung = "\n\n\n"
+                + "----------\n"
+                + "Thông tin kèm theo (bạn có thể xóa trước khi gửi)\n"
+                + "Ứng dụng: Phinova " + layPhienBan() + "\n"
+                + "Android: " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")\n"
+                + "Thiết bị: " + Build.MANUFACTURER + " " + Build.MODEL + "\n"
+                + "Tài khoản: " + taiKhoan + "\n";
+
+        Intent intent = new Intent(Intent.ACTION_SENDTO);
+        intent.setData(Uri.parse("mailto:"));
+        intent.putExtra(Intent.EXTRA_EMAIL, new String[]{EMAIL_GOP_Y});
+        intent.putExtra(Intent.EXTRA_SUBJECT, "[Phinova] Góp ý / báo lỗi");
+        intent.putExtra(Intent.EXTRA_TEXT, noiDung);
+
+        try {
+            startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            thongBao("Máy chưa có ứng dụng email. Bạn có thể gửi góp ý tới " + EMAIL_GOP_Y);
+        }
     }
 
     private void thongBao(String noiDung) {

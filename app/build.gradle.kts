@@ -39,6 +39,9 @@ dependencies {
     implementation(libs.material)
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
+    // Vân tay / khuôn mặt / khóa màn hình cho tính năng Khóa ứng dụng
+    implementation("androidx.biometric:biometric:1.1.0")
+
 
     // Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:34.7.0"))
