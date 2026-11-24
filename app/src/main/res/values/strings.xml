@@ -1,3 +1,31 @@
 <resources>
     <string name="app_name">Phinova</string>
+    <string name="login_email_invalid">Email không hợp lệ</string>
+    <string name="login_password_required">Vui lòng nhập mật khẩu</string>
+    <string name="login_in_progress">ĐANG ĐĂNG NHẬP...</string>
+    <string name="login_button">ĐĂNG NHẬP</string>
+    <string name="login_success">Đăng nhập thành công!</string>
+    <string name="login_failed">Email hoặc mật khẩu không đúng</string>
+    <string name="login_verify_check_failed">Không kiểm tra được trạng thái xác minh. Hãy kiểm tra kết nối rồi thử lại</string>
+    <string name="login_unverified_title">Email chưa được xác minh</string>
+    <string name="login_unverified_message">Hãy mở email gửi tới %1$s (kiểm tra cả thư rác), bấm vào liên kết xác minh rồi đăng nhập lại.</string>
+    <string name="login_resend">Gửi lại email</string>
+    <string name="login_close">Đóng</string>
+    <string name="login_resend_ok">Đã gửi lại email xác minh</string>
+    <string name="login_resend_fail">Chưa gửi được, vui lòng thử lại sau ít phút</string>
+    <string name="reset_enter_email">Nhập email để khôi phục mật khẩu</string>
+    <string name="reset_sent">Nếu email có tài khoản, hãy kiểm tra hộp thư để đặt lại mật khẩu</string>
+    <string name="reset_failed">Không thể gửi yêu cầu. Vui lòng thử lại sau</string>
+    <string name="register_name_required">Vui lòng nhập họ và tên</string>
+    <string name="register_email_invalid">Email không hợp lệ</string>
+    <string name="register_email_gmail_only">Chỉ nhận địa chỉ Gmail hợp lệ, ví dụ ten.ban@gmail.com</string>
+    <string name="register_password_weak">Mật khẩu phải có ít nhất 8 ký tự, gồm cả chữ và số</string>
+    <string name="register_confirm_mismatch">Mật khẩu xác nhận không khớp</string>
+    <string name="register_creating">ĐANG TẠO TÀI KHOẢN...</string>
+    <string name="register_button">ĐĂNG KÝ</string>
+    <string name="register_error_default">Không thể đăng ký</string>
+    <string name="register_verify_title">Xác minh email</string>
+    <string name="register_verify_sent">Đã gửi email xác minh tới %1$s.\n\nHãy mở email (kiểm tra cả thư rác), bấm vào liên kết, rồi quay lại đăng nhập.</string>
+    <string name="register_verify_not_sent">Tài khoản đã được tạo nhưng chưa gửi được email xác minh.\n\nHãy đăng nhập, app sẽ cho bạn gửi lại.</string>
+    <string name="register_go_login">Đến đăng nhập</string>
 </resources>

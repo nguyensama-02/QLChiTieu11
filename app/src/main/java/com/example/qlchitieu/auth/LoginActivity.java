@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.qlchitieu.dashboard.MainActivity;
 import com.example.qlchitieu.R;
+import com.example.qlchitieu.util.EmailRule;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -79,7 +80,7 @@ public class LoginActivity extends AppCompatActivity {
             if (!task.isSuccessful() || moi == null) {
                 dangXuLyXacMinh = false;
                 Toast.makeText(this,
-                        "Không kiểm tra được trạng thái xác minh. Hãy kiểm tra kết nối rồi thử lại",
+                        getString(R.string.login_verify_check_failed),
                         Toast.LENGTH_LONG).show();
                 return;
             }
@@ -107,12 +108,10 @@ public class LoginActivity extends AppCompatActivity {
         dangXuLyXacMinh = true;
 
         new AlertDialog.Builder(this)
-                .setTitle("Email chưa được xác minh")
-                .setMessage("Hãy mở email gửi tới " + nguoiDung.getEmail()
-                        + " (kiểm tra cả thư rác), bấm vào liên kết xác minh "
-                        + "rồi đăng nhập lại.")
+                .setTitle(getString(R.string.login_unverified_title))
+                .setMessage(getString(R.string.login_unverified_message, nguoiDung.getEmail()))
                 .setCancelable(false)
-                .setPositiveButton("Gửi lại email", (dialog, which) -> {
+                .setPositiveButton(getString(R.string.login_resend), (dialog, which) -> {
 
                     firebaseAuth.setLanguageCode("vi");
 
@@ -121,15 +120,15 @@ public class LoginActivity extends AppCompatActivity {
 
                                 Toast.makeText(this,
                                         task.isSuccessful()
-                                                ? "Đã gửi lại email xác minh"
-                                                : "Chưa gửi được, vui lòng thử lại sau ít phút",
+                                                ? getString(R.string.login_resend_ok)
+                                                : getString(R.string.login_resend_fail),
                                         Toast.LENGTH_LONG).show();
 
                                 firebaseAuth.signOut();
                                 dangXuLyXacMinh = false;
                             });
                 })
-                .setNegativeButton("Đóng", (dialog, which) -> {
+                .setNegativeButton(getString(R.string.login_close), (dialog, which) -> {
                     firebaseAuth.signOut();
                     dangXuLyXacMinh = false;
                 })
@@ -138,29 +137,29 @@ public class LoginActivity extends AppCompatActivity {
 
 
     private void dangNhap() {
-        String email = edtEmailDangNhap.getText().toString().trim();
+        String email = EmailRule.chuanHoa(edtEmailDangNhap.getText().toString());
         String matKhau = edtMatKhauDangNhap.getText().toString();
 
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            edtEmailDangNhap.setError("Email không hợp lệ");
+            edtEmailDangNhap.setError(getString(R.string.login_email_invalid));
             edtEmailDangNhap.requestFocus();
             return;
         }
 
         if (matKhau.isEmpty()) {
-            edtMatKhauDangNhap.setError("Vui lòng nhập mật khẩu");
+            edtMatKhauDangNhap.setError(getString(R.string.login_password_required));
             edtMatKhauDangNhap.requestFocus();
             return;
         }
 
         btnDangNhap.setEnabled(false);
-        btnDangNhap.setText("ĐANG ĐĂNG NHẬP...");
+        btnDangNhap.setText(getString(R.string.login_in_progress));
 
         firebaseAuth.signInWithEmailAndPassword(email, matKhau)
                 .addOnCompleteListener(this, task -> {
 
                     btnDangNhap.setEnabled(true);
-                    btnDangNhap.setText("ĐĂNG NHẬP");
+                    btnDangNhap.setText(getString(R.string.login_button));
 
                     if (task.isSuccessful()) {
 
@@ -173,23 +172,23 @@ public class LoginActivity extends AppCompatActivity {
                         }
 
                         Toast.makeText(this,
-                                "Đăng nhập thành công!",
+                                getString(R.string.login_success),
                                 Toast.LENGTH_SHORT).show();
 
                         vaoManHinhChinh();
                     } else {
                         Toast.makeText(this,
-                                "Email hoặc mật khẩu không đúng",
+                                getString(R.string.login_failed),
                                 Toast.LENGTH_LONG).show();
                     }
                 });
     }
 
     private void quenMatKhau() {
-        String email = edtEmailDangNhap.getText().toString().trim();
+        String email = EmailRule.chuanHoa(edtEmailDangNhap.getText().toString());
 
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            edtEmailDangNhap.setError("Nhập email để khôi phục mật khẩu");
+            edtEmailDangNhap.setError(getString(R.string.reset_enter_email));
             edtEmailDangNhap.requestFocus();
             return;
         }
@@ -198,11 +197,11 @@ public class LoginActivity extends AppCompatActivity {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         Toast.makeText(this,
-                                "Nếu email có tài khoản, hãy kiểm tra hộp thư để đặt lại mật khẩu",
+                                getString(R.string.reset_sent),
                                 Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(this,
-                                "Không thể gửi yêu cầu. Vui lòng thử lại sau",
+                                getString(R.string.reset_failed),
                                 Toast.LENGTH_LONG).show();
                     }
                 });

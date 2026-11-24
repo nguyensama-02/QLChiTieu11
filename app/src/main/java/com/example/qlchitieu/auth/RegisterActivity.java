@@ -6,7 +6,6 @@ import android.util.Patterns;
 import android.view.MotionEvent;
 import android.widget.EditText;
 import android.widget.Toast;
-import android.content.Intent;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -16,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.example.qlchitieu.data.repository.UserProfileRepository;
 import com.example.qlchitieu.util.EmailRule;
+import com.example.qlchitieu.util.PasswordRule;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,9 +46,8 @@ public class RegisterActivity extends AppCompatActivity {
         caiDatHienAnMatKhau(edtXacNhanMatKhau);
 
         btnDangKy.setOnClickListener(v -> dangKyTaiKhoan());
-        findViewById(R.id.tvDangNhap).setOnClickListener(v -> {
-            startActivity(new Intent(this, LoginActivity.class));
-        });
+        // Login luôn nằm ngay dưới Register trong back stack nên chỉ cần đóng màn này
+        findViewById(R.id.tvDangNhap).setOnClickListener(v -> finish());
     }
 
     private void dangKyTaiKhoan() {
@@ -59,49 +58,49 @@ public class RegisterActivity extends AppCompatActivity {
         String xacNhan = edtXacNhanMatKhau.getText().toString();
 
         if (hoTen.isEmpty()) {
-            edtHoTen.setError("Vui lòng nhập họ và tên");
+            edtHoTen.setError(getString(R.string.register_name_required));
             edtHoTen.requestFocus();
             return;
         }
 
         if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            edtEmail.setError("Email không hợp lệ");
+            edtEmail.setError(getString(R.string.register_email_invalid));
             edtEmail.requestFocus();
             return;
         }
 
         // Chỉ nhận Gmail: ten@gmail.com, phần tên 6-30 ký tự gồm chữ, số, dấu chấm
         if (!EmailRule.laGmailHopLe(email)) {
-            edtEmail.setError("Chỉ nhận địa chỉ Gmail hợp lệ, ví dụ ten.ban@gmail.com");
+            edtEmail.setError(getString(R.string.register_email_gmail_only));
             edtEmail.requestFocus();
             return;
         }
 
-        if (matKhau.length() < 6) {
-            edtMatKhau.setError("Mật khẩu phải có ít nhất 6 ký tự");
+        if (!PasswordRule.laHopLe(matKhau)) {
+            edtMatKhau.setError(getString(R.string.register_password_weak));
             edtMatKhau.requestFocus();
             return;
         }
 
         if (!matKhau.equals(xacNhan)) {
-            edtXacNhanMatKhau.setError("Mật khẩu xác nhận không khớp");
+            edtXacNhanMatKhau.setError(getString(R.string.register_confirm_mismatch));
             edtXacNhanMatKhau.requestFocus();
             return;
         }
 
         btnDangKy.setEnabled(false);
-        btnDangKy.setText("ĐANG TẠO TÀI KHOẢN...");
+        btnDangKy.setText(getString(R.string.register_creating));
 
         firebaseAuth.createUserWithEmailAndPassword(email, matKhau)
                 .addOnCompleteListener(this, task -> {
 
                     if (!task.isSuccessful()) {
                         btnDangKy.setEnabled(true);
-                        btnDangKy.setText("ĐĂNG KÝ");
+                        btnDangKy.setText(getString(R.string.register_button));
 
                         String loi = task.getException() != null
                                 ? task.getException().getMessage()
-                                : "Không thể đăng ký";
+                                : getString(R.string.register_error_default);
 
                         Toast.makeText(this, loi, Toast.LENGTH_LONG).show();
                         return;
@@ -122,7 +121,7 @@ public class RegisterActivity extends AppCompatActivity {
                                 firebaseAuth.signOut();
 
                                 btnDangKy.setEnabled(true);
-                                btnDangKy.setText("ĐĂNG KÝ");
+                                btnDangKy.setText(getString(R.string.register_button));
 
                                 hienThongBaoXacMinh(email, guiTask.isSuccessful());
                             });
@@ -132,17 +131,14 @@ public class RegisterActivity extends AppCompatActivity {
     private void hienThongBaoXacMinh(String email, boolean daGui) {
 
         String noiDung = daGui
-                ? "Đã gửi email xác minh tới " + email + ".\n\n"
-                  + "Hãy mở email (kiểm tra cả thư rác), bấm vào liên kết, "
-                  + "rồi quay lại đăng nhập."
-                : "Tài khoản đã được tạo nhưng chưa gửi được email xác minh.\n\n"
-                  + "Hãy đăng nhập, app sẽ cho bạn gửi lại.";
+                ? getString(R.string.register_verify_sent, email)
+                : getString(R.string.register_verify_not_sent);
 
         new AlertDialog.Builder(this)
-                .setTitle("Xác minh email")
+                .setTitle(getString(R.string.register_verify_title))
                 .setMessage(noiDung)
                 .setCancelable(false)
-                .setPositiveButton("Đến đăng nhập", (dialog, which) -> finish())
+                .setPositiveButton(getString(R.string.register_go_login), (dialog, which) -> finish())
                 .show();
     }
 
