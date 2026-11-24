@@ -7,12 +7,15 @@ import android.view.MotionEvent;
 import android.widget.EditText;
 import android.widget.Toast;
 import android.content.Intent;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.qlchitieu.R;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.example.qlchitieu.data.repository.UserProfileRepository;
+import com.example.qlchitieu.util.EmailRule;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,7 +54,7 @@ public class RegisterActivity extends AppCompatActivity {
     private void dangKyTaiKhoan() {
 
         String hoTen = edtHoTen.getText().toString().trim();
-        String email = edtEmail.getText().toString().trim();
+        String email = EmailRule.chuanHoa(edtEmail.getText().toString());
         String matKhau = edtMatKhau.getText().toString();
         String xacNhan = edtXacNhanMatKhau.getText().toString();
 
@@ -63,6 +66,13 @@ public class RegisterActivity extends AppCompatActivity {
 
         if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             edtEmail.setError("Email không hợp lệ");
+            edtEmail.requestFocus();
+            return;
+        }
+
+        // Chỉ nhận Gmail: ten@gmail.com, phần tên 6-30 ký tự gồm chữ, số, dấu chấm
+        if (!EmailRule.laGmailHopLe(email)) {
+            edtEmail.setError("Chỉ nhận địa chỉ Gmail hợp lệ, ví dụ ten.ban@gmail.com");
             edtEmail.requestFocus();
             return;
         }
@@ -97,18 +107,43 @@ public class RegisterActivity extends AppCompatActivity {
                         return;
                     }
 
-                    String uid = firebaseAuth.getCurrentUser().getUid();
+                    FirebaseUser nguoiDung = firebaseAuth.getCurrentUser();
+                    String uid = nguoiDung.getUid();
 
                     // Lưu hồ sơ vào SQLite, SyncManager sẽ đưa lên Firestore (kể cả khi mất mạng lúc này)
                     userProfileRepository.taoHoSo(uid, hoTen, email);
 
-                    Toast.makeText(this,
-                            "Đăng ký tài khoản thành công!",
-                            Toast.LENGTH_LONG).show();
+                    // Gửi email xác minh rồi đăng xuất: chỉ vào được app sau khi bấm liên kết trong email
+                    firebaseAuth.setLanguageCode("vi");
 
-                    btnDangKy.setEnabled(true);
-                    btnDangKy.setText("ĐĂNG KÝ");
+                    nguoiDung.sendEmailVerification()
+                            .addOnCompleteListener(this, guiTask -> {
+
+                                firebaseAuth.signOut();
+
+                                btnDangKy.setEnabled(true);
+                                btnDangKy.setText("ĐĂNG KÝ");
+
+                                hienThongBaoXacMinh(email, guiTask.isSuccessful());
+                            });
                 });
+    }
+
+    private void hienThongBaoXacMinh(String email, boolean daGui) {
+
+        String noiDung = daGui
+                ? "Đã gửi email xác minh tới " + email + ".\n\n"
+                  + "Hãy mở email (kiểm tra cả thư rác), bấm vào liên kết, "
+                  + "rồi quay lại đăng nhập."
+                : "Tài khoản đã được tạo nhưng chưa gửi được email xác minh.\n\n"
+                  + "Hãy đăng nhập, app sẽ cho bạn gửi lại.";
+
+        new AlertDialog.Builder(this)
+                .setTitle("Xác minh email")
+                .setMessage(noiDung)
+                .setCancelable(false)
+                .setPositiveButton("Đến đăng nhập", (dialog, which) -> finish())
+                .show();
     }
 
     private void caiDatHienAnMatKhau(EditText editText) {

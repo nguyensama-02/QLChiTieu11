@@ -627,10 +627,18 @@ public class TransactionDao {
     // ------------------------------------------------------------------
 
     /**
-     * Tổng thu và tổng chi trong khoảng [tuNgay, denNgay) (epoch ms).
+     * Tổng thu và tổng chi trong khoảng [tuNgay, denNgay) (epoch ms), mọi ví.
      * @return mảng {tổng thu nhập, tổng chi tiêu}; chuyển tiền không được tính.
      */
     public long[] sumIncomeExpense(String userId, long tuNgay, long denNgay) {
+        return sumIncomeExpense(userId, tuNgay, denNgay, null);
+    }
+
+    /**
+     * Như trên nhưng chỉ tính một ví (maVi = null nghĩa là tất cả ví).
+     * Thu nhập và chi tiêu đều ghi ví ở cột ví nguồn.
+     */
+    public long[] sumIncomeExpense(String userId, long tuNgay, long denNgay, String maVi) {
         long thu = 0;
         long chi = 0;
 
@@ -643,10 +651,18 @@ public class TransactionDao {
                 + " AND " + PhinovaDbHelper.TX_SO_TIEN + ">0"
                 + " AND " + PhinovaDbHelper.TX_NGAY + ">=?"
                 + " AND " + PhinovaDbHelper.TX_NGAY + "<?"
+                + (maVi == null ? "" : " AND " + PhinovaDbHelper.TX_VI_NGUON + "=?")
                 + " GROUP BY " + PhinovaDbHelper.TX_LOAI;
 
-        try (Cursor c = db.rawQuery(sql,
-                new String[]{userId, String.valueOf(tuNgay), String.valueOf(denNgay)})) {
+        java.util.ArrayList<String> args = new java.util.ArrayList<>();
+        args.add(userId);
+        args.add(String.valueOf(tuNgay));
+        args.add(String.valueOf(denNgay));
+        if (maVi != null) {
+            args.add(maVi);
+        }
+
+        try (Cursor c = db.rawQuery(sql, args.toArray(new String[0]))) {
 
             while (c.moveToNext()) {
                 String loai = c.getString(0);
@@ -662,11 +678,23 @@ public class TransactionDao {
     }
 
     /**
-     * Tổng chi tiêu theo danh mục trong khoảng [tuNgay, denNgay).
+     * Tổng chi tiêu theo danh mục trong khoảng [tuNgay, denNgay), mọi ví.
      * Giao dịch không có danh mục được gộp vào "Chi tiêu khác".
      */
     public HashMap<String, Long> sumExpenseByCategory(String userId, long tuNgay, long denNgay) {
+        return sumByCategory(userId, "Chi tiêu", tuNgay, denNgay, null);
+    }
+
+    /**
+     * Tổng theo danh mục của một loại ("Chi tiêu" hoặc "Thu nhập") trong [tuNgay, denNgay).
+     * maVi = null nghĩa là tất cả ví. Giao dịch không có danh mục được gộp vào
+     * "Chi tiêu khác" hoặc "Thu nhập khác" tùy loại.
+     */
+    public HashMap<String, Long> sumByCategory(String userId, String loai,
+                                               long tuNgay, long denNgay, String maVi) {
         HashMap<String, Long> ketQua = new HashMap<>();
+
+        String danhMucMacDinh = "Thu nhập".equals(loai) ? "Thu nhập khác" : "Chi tiêu khác";
 
         SQLiteDatabase db = helper.getReadableDatabase();
 
@@ -678,17 +706,25 @@ public class TransactionDao {
                 + " AND " + PhinovaDbHelper.TX_SO_TIEN + ">0"
                 + " AND " + PhinovaDbHelper.TX_NGAY + ">=?"
                 + " AND " + PhinovaDbHelper.TX_NGAY + "<?"
+                + (maVi == null ? "" : " AND " + PhinovaDbHelper.TX_VI_NGUON + "=?")
                 + " GROUP BY " + PhinovaDbHelper.TX_DANH_MUC;
 
-        try (Cursor c = db.rawQuery(sql,
-                new String[]{userId, "Chi tiêu",
-                        String.valueOf(tuNgay), String.valueOf(denNgay)})) {
+        java.util.ArrayList<String> args = new java.util.ArrayList<>();
+        args.add(userId);
+        args.add(loai);
+        args.add(String.valueOf(tuNgay));
+        args.add(String.valueOf(denNgay));
+        if (maVi != null) {
+            args.add(maVi);
+        }
+
+        try (Cursor c = db.rawQuery(sql, args.toArray(new String[0]))) {
 
             while (c.moveToNext()) {
                 String danhMuc = c.getString(0);
 
                 if (danhMuc == null || danhMuc.trim().isEmpty()) {
-                    danhMuc = "Chi tiêu khác";
+                    danhMuc = danhMucMacDinh;
                 }
 
                 long cu = ketQua.containsKey(danhMuc) ? ketQua.get(danhMuc) : 0L;
@@ -710,6 +746,147 @@ public class TransactionDao {
                 new String[]{userId},
                 null, null,
                 PhinovaDbHelper.TX_NGAY + " DESC, " + PhinovaDbHelper.C_UPDATED_AT + " DESC",
+                String.valueOf(soLuong))) {
+
+            while (c.moveToNext()) {
+                list.add(new Transaction(
+                        c.getString(c.getColumnIndexOrThrow(PhinovaDbHelper.TX_ID)),
+                        c.getString(c.getColumnIndexOrThrow(PhinovaDbHelper.TX_LOAI)),
+                        c.getString(c.getColumnIndexOrThrow(PhinovaDbHelper.TX_DANH_MUC)),
+                        c.getString(c.getColumnIndexOrThrow(PhinovaDbHelper.TX_GHI_CHU)),
+                        c.getString(c.getColumnIndexOrThrow(PhinovaDbHelper.TX_VI_NGUON)),
+                        c.getString(c.getColumnIndexOrThrow(PhinovaDbHelper.TX_VI_DICH)),
+                        c.getLong(c.getColumnIndexOrThrow(PhinovaDbHelper.TX_SO_TIEN)),
+                        new Date(c.getLong(c.getColumnIndexOrThrow(PhinovaDbHelper.TX_NGAY)))));
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Tổng chi tiêu theo từng ngày trong khoảng [tuNgay, denNgay) (một tháng).
+     * @return mảng độ dài soNgay; phần tử i là tổng chi của ngày (i + 1).
+     */
+    public long[] sumExpenseByDay(String userId, long tuNgay, long denNgay,
+                                  String maVi, int soNgay) {
+
+        long[] ketQua = new long[soNgay];
+
+        SQLiteDatabase db = helper.getReadableDatabase();
+
+        String sql = "SELECT CAST(strftime('%d', " + PhinovaDbHelper.TX_NGAY
+                + " / 1000, 'unixepoch', 'localtime') AS INTEGER), SUM(" + PhinovaDbHelper.TX_SO_TIEN + ")"
+                + " FROM " + PhinovaDbHelper.T_TRANSACTIONS
+                + " WHERE " + PhinovaDbHelper.C_USER_ID + "=?"
+                + " AND " + PhinovaDbHelper.C_IS_DELETED + "=0"
+                + " AND " + PhinovaDbHelper.TX_LOAI + "=?"
+                + " AND " + PhinovaDbHelper.TX_SO_TIEN + ">0"
+                + " AND " + PhinovaDbHelper.TX_NGAY + ">=?"
+                + " AND " + PhinovaDbHelper.TX_NGAY + "<?"
+                + (maVi == null ? "" : " AND " + PhinovaDbHelper.TX_VI_NGUON + "=?")
+                + " GROUP BY 1";
+
+        java.util.ArrayList<String> args = new java.util.ArrayList<>();
+        args.add(userId);
+        args.add("Chi tiêu");
+        args.add(String.valueOf(tuNgay));
+        args.add(String.valueOf(denNgay));
+        if (maVi != null) {
+            args.add(maVi);
+        }
+
+        try (Cursor c = db.rawQuery(sql, args.toArray(new String[0]))) {
+
+            while (c.moveToNext()) {
+                int ngay = c.getInt(0);
+
+                if (ngay >= 1 && ngay <= soNgay) {
+                    ketQua[ngay - 1] = c.getLong(1);
+                }
+            }
+        }
+        return ketQua;
+    }
+
+    /**
+     * Chi tiêu từng ngày trong [tuNgay, denNgay), xếp theo số ngày kể từ tuNgay
+     * (phần tử 0 là ngày chứa tuNgay). Khác sumExpenseByDay (gom theo ngày trong tháng),
+     * hàm này dùng được cho khoảng vắt qua hai tháng như "30 ngày qua".
+     */
+    public long[] sumExpenseByDayFrom(String userId, long tuNgay, long denNgay,
+                                      String maVi, int soNgay) {
+
+        long[] ketQua = new long[soNgay];
+
+        SQLiteDatabase db = helper.getReadableDatabase();
+
+        // Số ngày lệch so với ngày đầu kỳ, tính theo giờ địa phương
+        String sql = "SELECT CAST(julianday(date(" + PhinovaDbHelper.TX_NGAY
+                + " / 1000, 'unixepoch', 'localtime'))"
+                + " - julianday(date(" + tuNgay + " / 1000, 'unixepoch', 'localtime'))"
+                + " AS INTEGER), SUM(" + PhinovaDbHelper.TX_SO_TIEN + ")"
+                + " FROM " + PhinovaDbHelper.T_TRANSACTIONS
+                + " WHERE " + PhinovaDbHelper.C_USER_ID + "=?"
+                + " AND " + PhinovaDbHelper.C_IS_DELETED + "=0"
+                + " AND " + PhinovaDbHelper.TX_LOAI + "=?"
+                + " AND " + PhinovaDbHelper.TX_SO_TIEN + ">0"
+                + " AND " + PhinovaDbHelper.TX_NGAY + ">=?"
+                + " AND " + PhinovaDbHelper.TX_NGAY + "<?"
+                + (maVi == null ? "" : " AND " + PhinovaDbHelper.TX_VI_NGUON + "=?")
+                + " GROUP BY 1";
+
+        java.util.ArrayList<String> args = new java.util.ArrayList<>();
+        args.add(userId);
+        args.add("Chi tiêu");
+        args.add(String.valueOf(tuNgay));
+        args.add(String.valueOf(denNgay));
+        if (maVi != null) {
+            args.add(maVi);
+        }
+
+        try (Cursor c = db.rawQuery(sql, args.toArray(new String[0]))) {
+
+            while (c.moveToNext()) {
+                int viTri = c.getInt(0);
+
+                if (viTri >= 0 && viTri < soNgay) {
+                    ketQua[viTri] = c.getLong(1);
+                }
+            }
+        }
+        return ketQua;
+    }
+
+    /** Các khoản chi tiêu lớn nhất trong [tuNgay, denNgay), maVi = null: tất cả ví. */
+    public List<Transaction> getLargestExpenses(String userId, long tuNgay, long denNgay,
+                                                String maVi, int soLuong) {
+        List<Transaction> list = new ArrayList<>();
+        SQLiteDatabase db = helper.getReadableDatabase();
+
+        String dieuKien = PhinovaDbHelper.C_USER_ID + "=?"
+                + " AND " + PhinovaDbHelper.C_IS_DELETED + "=0"
+                + " AND " + PhinovaDbHelper.TX_LOAI + "=?"
+                + " AND " + PhinovaDbHelper.TX_SO_TIEN + ">0"
+                + " AND " + PhinovaDbHelper.TX_NGAY + ">=?"
+                + " AND " + PhinovaDbHelper.TX_NGAY + "<?"
+                + (maVi == null ? "" : " AND " + PhinovaDbHelper.TX_VI_NGUON + "=?");
+
+        java.util.ArrayList<String> args = new java.util.ArrayList<>();
+        args.add(userId);
+        args.add("Chi tiêu");
+        args.add(String.valueOf(tuNgay));
+        args.add(String.valueOf(denNgay));
+        if (maVi != null) {
+            args.add(maVi);
+        }
+
+        try (Cursor c = db.query(
+                PhinovaDbHelper.T_TRANSACTIONS,
+                null,
+                dieuKien,
+                args.toArray(new String[0]),
+                null, null,
+                PhinovaDbHelper.TX_SO_TIEN + " DESC, " + PhinovaDbHelper.TX_NGAY + " DESC",
                 String.valueOf(soLuong))) {
 
             while (c.moveToNext()) {

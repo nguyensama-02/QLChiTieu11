@@ -10,12 +10,14 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.qlchitieu.dashboard.MainActivity;
 import com.example.qlchitieu.R;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -24,6 +26,9 @@ public class LoginActivity extends AppCompatActivity {
     TextView tvChuyenDangKy, tvQuenMatKhau;
 
     FirebaseAuth firebaseAuth;
+
+    // Đang kiểm tra / đang hỏi xác minh: tránh mở chồng nhiều hộp thoại khi onStart chạy lại
+    private boolean dangXuLyXacMinh = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,12 +58,82 @@ public class LoginActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-                    Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
+        FirebaseUser nguoiDung = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (nguoiDung == null || dangXuLyXacMinh) {
+            return;
         }
+
+        if (nguoiDung.isEmailVerified()) {
+            vaoManHinhChinh();
+            return;
+        }
+
+        // Phiên cũ chưa xác minh: tải lại thông tin (người dùng có thể vừa bấm liên kết)
+        dangXuLyXacMinh = true;
+
+        nguoiDung.reload().addOnCompleteListener(this, task -> {
+
+            FirebaseUser moi = firebaseAuth.getCurrentUser();
+
+            if (!task.isSuccessful() || moi == null) {
+                dangXuLyXacMinh = false;
+                Toast.makeText(this,
+                        "Không kiểm tra được trạng thái xác minh. Hãy kiểm tra kết nối rồi thử lại",
+                        Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            if (moi.isEmailVerified()) {
+                dangXuLyXacMinh = false;
+                vaoManHinhChinh();
+                return;
+            }
+
+            hienThiChuaXacMinh(moi);
+        });
+    }
+
+    private void vaoManHinhChinh() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+                Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+    }
+
+    /** Tài khoản chưa xác minh email: không cho vào, cho gửi lại email, rồi đăng xuất. */
+    private void hienThiChuaXacMinh(FirebaseUser nguoiDung) {
+
+        dangXuLyXacMinh = true;
+
+        new AlertDialog.Builder(this)
+                .setTitle("Email chưa được xác minh")
+                .setMessage("Hãy mở email gửi tới " + nguoiDung.getEmail()
+                        + " (kiểm tra cả thư rác), bấm vào liên kết xác minh "
+                        + "rồi đăng nhập lại.")
+                .setCancelable(false)
+                .setPositiveButton("Gửi lại email", (dialog, which) -> {
+
+                    firebaseAuth.setLanguageCode("vi");
+
+                    nguoiDung.sendEmailVerification()
+                            .addOnCompleteListener(this, task -> {
+
+                                Toast.makeText(this,
+                                        task.isSuccessful()
+                                                ? "Đã gửi lại email xác minh"
+                                                : "Chưa gửi được, vui lòng thử lại sau ít phút",
+                                        Toast.LENGTH_LONG).show();
+
+                                firebaseAuth.signOut();
+                                dangXuLyXacMinh = false;
+                            });
+                })
+                .setNegativeButton("Đóng", (dialog, which) -> {
+                    firebaseAuth.signOut();
+                    dangXuLyXacMinh = false;
+                })
+                .show();
     }
 
 
@@ -88,14 +163,20 @@ public class LoginActivity extends AppCompatActivity {
                     btnDangNhap.setText("ĐĂNG NHẬP");
 
                     if (task.isSuccessful()) {
+
+                        FirebaseUser nguoiDung = firebaseAuth.getCurrentUser();
+
+                        // Chưa bấm liên kết trong email xác minh thì chưa cho vào
+                        if (nguoiDung != null && !nguoiDung.isEmailVerified()) {
+                            hienThiChuaXacMinh(nguoiDung);
+                            return;
+                        }
+
                         Toast.makeText(this,
                                 "Đăng nhập thành công!",
                                 Toast.LENGTH_SHORT).show();
 
-                        Intent intent = new Intent(this, MainActivity.class);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-                                Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(intent);
+                        vaoManHinhChinh();
                     } else {
                         Toast.makeText(this,
                                 "Email hoặc mật khẩu không đúng",

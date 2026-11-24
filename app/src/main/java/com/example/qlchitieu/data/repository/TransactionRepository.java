@@ -8,7 +8,8 @@ import com.example.qlchitieu.model.Transaction;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.Source;
-
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -123,9 +124,26 @@ public class TransactionRepository {
         return dao.sumIncomeExpense(userId, tuNgay, denNgay);
     }
 
+    /** Như trên nhưng chỉ một ví (maVi = null: tất cả ví). */
+    public long[] getIncomeExpense(String userId, long tuNgay, long denNgay, String maVi) {
+        return dao.sumIncomeExpense(userId, tuNgay, denNgay, maVi);
+    }
+
     /** Chi tiêu theo danh mục trong [tuNgay, denNgay). Tính bằng SQL. */
     public HashMap<String, Long> getExpenseByCategory(String userId, long tuNgay, long denNgay) {
         return dao.sumExpenseByCategory(userId, tuNgay, denNgay);
+    }
+
+    /** Chi tiêu theo danh mục, chỉ một ví (maVi = null: tất cả ví). */
+    public HashMap<String, Long> getExpenseByCategory(String userId, long tuNgay, long denNgay,
+                                                      String maVi) {
+        return dao.sumByCategory(userId, "Chi tiêu", tuNgay, denNgay, maVi);
+    }
+
+    /** Thu nhập theo danh mục, chỉ một ví (maVi = null: tất cả ví). */
+    public HashMap<String, Long> getIncomeByCategory(String userId, long tuNgay, long denNgay,
+                                                     String maVi) {
+        return dao.sumByCategory(userId, "Thu nhập", tuNgay, denNgay, maVi);
     }
 
     /** Các giao dịch mới nhất. */
@@ -193,5 +211,64 @@ public class TransactionRepository {
 
         callback.onDone(true, null);
         dongBo();
+    }
+    /**
+     * Thu, chi của soThang tháng liên tiếp, tháng cuối là tháng chứa thangCuoi.
+     * Kết quả xếp từ tháng cũ nhất đến tháng mới nhất, mỗi phần tử là {thu, chi}.
+     * Tháng không có giao dịch cho {0, 0}.
+     */
+    public List<long[]> getMonthlyIncomeExpense(String userId, Calendar thangCuoi, int soThang) {
+        return getMonthlyIncomeExpense(userId, thangCuoi, soThang, null);
+    }
+
+    /** Như trên nhưng chỉ một ví (maVi = null: tất cả ví). */
+    public List<long[]> getMonthlyIncomeExpense(String userId, Calendar thangCuoi, int soThang,
+                                                String maVi) {
+
+        List<long[]> ketQua = new ArrayList<>();
+
+        for (int i = soThang - 1; i >= 0; i--) {
+
+            Calendar batDau = (Calendar) thangCuoi.clone();
+            batDau.set(Calendar.DAY_OF_MONTH, 1);
+            batDau.set(Calendar.HOUR_OF_DAY, 0);
+            batDau.set(Calendar.MINUTE, 0);
+            batDau.set(Calendar.SECOND, 0);
+            batDau.set(Calendar.MILLISECOND, 0);
+            batDau.add(Calendar.MONTH, -i);
+
+            Calendar ketThuc = (Calendar) batDau.clone();
+            ketThuc.add(Calendar.MONTH, 1);
+
+            ketQua.add(dao.sumIncomeExpense(
+                    userId,
+                    batDau.getTimeInMillis(),
+                    ketThuc.getTimeInMillis(),
+                    maVi
+            ));
+        }
+
+        return ketQua;
+    }
+
+    /** Chi tiêu từng ngày trong [tuNgay, denNgay): phần tử i là ngày (i + 1). */
+    public long[] getDailyExpense(String userId, long tuNgay, long denNgay,
+                                  String maVi, int soNgay) {
+        return dao.sumExpenseByDay(userId, tuNgay, denNgay, maVi, soNgay);
+    }
+
+    /**
+     * Chi tiêu từng ngày kể từ tuNgay: phần tử i là ngày thứ (i + 1) của khoảng.
+     * Dùng cho khoảng không theo tháng (vd: 30 ngày qua).
+     */
+    public long[] getDailyExpenseFrom(String userId, long tuNgay, long denNgay,
+                                      String maVi, int soNgay) {
+        return dao.sumExpenseByDayFrom(userId, tuNgay, denNgay, maVi, soNgay);
+    }
+
+    /** Các khoản chi lớn nhất trong [tuNgay, denNgay), lớn đến nhỏ. */
+    public List<Transaction> getLargestExpenses(String userId, long tuNgay, long denNgay,
+                                                String maVi, int soLuong) {
+        return dao.getLargestExpenses(userId, tuNgay, denNgay, maVi, soLuong);
     }
 }
