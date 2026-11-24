@@ -149,23 +149,34 @@
                 android:textStyle="bold" />
 
 
-            <EditText
-                android:id="@+id/edtMatKhau"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilMatKhau"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_input"
-                android:drawableStart="@drawable/ic_lock"
-                android:drawableEnd="@drawable/ic_eye_off"
-                android:drawablePadding="12dp"
-                android:hint="Tối thiểu 8 ký tự, gồm chữ và số"
-                android:inputType="textPassword"
-                android:autofillHints="newPassword"
-                android:singleLine="true"
-                android:padding="16dp"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary"
-                android:textSize="14sp" />
+                app:boxBackgroundMode="none"
+                app:endIconMode="password_toggle"
+                app:endIconTint="@color/text_secondary"
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edtMatKhau"
+                    android:layout_height="52dp"
+                    android:background="@null"
+                    android:layout_width="match_parent"
+                    android:drawableStart="@drawable/ic_lock"
+                    android:drawablePadding="12dp"
+                    android:hint="Tối thiểu 8 ký tự, gồm chữ và số"
+                    android:inputType="textPassword"
+                    android:autofillHints="newPassword"
+                    android:singleLine="true"
+                    android:padding="16dp"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:textSize="14sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
 
 
             <TextView
@@ -179,23 +190,34 @@
 
 
 
-            <EditText
-                android:id="@+id/edtXacNhanMatKhau"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilXacNhanMatKhau"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_input"
-                android:drawableStart="@drawable/ic_lock"
-                android:drawableEnd="@drawable/ic_eye_off"
-                android:drawablePadding="12dp"
-                android:hint="Nhập lại mật khẩu"
-                android:inputType="textPassword"
-                android:autofillHints="newPassword"
-                android:singleLine="true"
-                android:padding="16dp"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary"
-                android:textSize="14sp" />
+                app:boxBackgroundMode="none"
+                app:endIconMode="password_toggle"
+                app:endIconTint="@color/text_secondary"
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edtXacNhanMatKhau"
+                    android:layout_height="52dp"
+                    android:background="@null"
+                    android:layout_width="match_parent"
+                    android:drawableStart="@drawable/ic_lock"
+                    android:drawablePadding="12dp"
+                    android:hint="Nhập lại mật khẩu"
+                    android:inputType="textPassword"
+                    android:autofillHints="newPassword"
+                    android:singleLine="true"
+                    android:padding="16dp"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:textSize="14sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
 
 
 

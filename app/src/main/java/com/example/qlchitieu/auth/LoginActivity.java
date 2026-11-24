@@ -3,9 +3,7 @@ package com.example.qlchitieu.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.InputType;
 import android.util.Patterns;
-import android.view.MotionEvent;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.qlchitieu.dashboard.MainActivity;
 import com.example.qlchitieu.R;
 import com.example.qlchitieu.util.EmailRule;
+import com.example.qlchitieu.util.NetworkUtil;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -44,7 +43,6 @@ public class LoginActivity extends AppCompatActivity {
 
         firebaseAuth = FirebaseAuth.getInstance();
 
-        caiDatHienAnMatKhau(edtMatKhauDangNhap);
 
         btnDangNhap.setOnClickListener(v -> dangNhap());
 
@@ -152,6 +150,11 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
+        if (!NetworkUtil.coMang(this)) {
+            Toast.makeText(this, getString(R.string.error_network), Toast.LENGTH_LONG).show();
+            return;
+        }
+
         btnDangNhap.setEnabled(false);
         btnDangNhap.setText(getString(R.string.login_in_progress));
 
@@ -178,7 +181,7 @@ public class LoginActivity extends AppCompatActivity {
                         vaoManHinhChinh();
                     } else {
                         Toast.makeText(this,
-                                getString(R.string.login_failed),
+                                getString(AuthErrorMapper.choDangNhap(task.getException())),
                                 Toast.LENGTH_LONG).show();
                     }
                 });
@@ -193,6 +196,11 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
+        if (!NetworkUtil.coMang(this)) {
+            Toast.makeText(this, getString(R.string.error_network), Toast.LENGTH_LONG).show();
+            return;
+        }
+
         firebaseAuth.sendPasswordResetEmail(email)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -201,56 +209,9 @@ public class LoginActivity extends AppCompatActivity {
                                 Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(this,
-                                getString(R.string.reset_failed),
+                                getString(AuthErrorMapper.choQuenMatKhau(task.getException())),
                                 Toast.LENGTH_LONG).show();
                     }
                 });
-    }
-
-    private void caiDatHienAnMatKhau(EditText editText) {
-        final boolean[] hienMatKhau = {false};
-
-        editText.setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_UP) {
-
-                android.graphics.drawable.Drawable icon =
-                        editText.getCompoundDrawablesRelative()[2];
-
-                if (icon != null) {
-                    int viTriIcon = editText.getWidth()
-                            - editText.getPaddingEnd()
-                            - icon.getBounds().width();
-
-                    if (event.getX() >= viTriIcon) {
-                        hienMatKhau[0] = !hienMatKhau[0];
-
-                        if (hienMatKhau[0]) {
-                            editText.setInputType(
-                                    InputType.TYPE_CLASS_TEXT |
-                                            InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                            );
-                        } else {
-                            editText.setInputType(
-                                    InputType.TYPE_CLASS_TEXT |
-                                            InputType.TYPE_TEXT_VARIATION_PASSWORD
-                            );
-                        }
-
-                        editText.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                R.drawable.ic_lock,
-                                0,
-                                hienMatKhau[0]
-                                        ? R.drawable.ic_eye
-                                        : R.drawable.ic_eye_off,
-                                0
-                        );
-
-                        editText.setSelection(editText.length());
-                        return true;
-                    }
-                }
-            }
-            return false;
-        });
     }
 }

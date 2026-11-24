@@ -15,7 +15,7 @@
     <string name="login_resend_fail">Chưa gửi được, vui lòng thử lại sau ít phút</string>
     <string name="reset_enter_email">Nhập email để khôi phục mật khẩu</string>
     <string name="reset_sent">Nếu email có tài khoản, hãy kiểm tra hộp thư để đặt lại mật khẩu</string>
-    <string name="reset_failed">Không thể gửi yêu cầu. Vui lòng thử lại sau</string>
+    <string name="reset_failed">Không thể gửi yêu cầu. Hãy kiểm tra kết nối mạng và thử lại</string>
     <string name="register_name_required">Vui lòng nhập họ và tên</string>
     <string name="register_email_invalid">Email không hợp lệ</string>
     <string name="register_email_gmail_only">Chỉ nhận địa chỉ Gmail hợp lệ, ví dụ ten.ban@gmail.com</string>
@@ -23,9 +23,14 @@
     <string name="register_confirm_mismatch">Mật khẩu xác nhận không khớp</string>
     <string name="register_creating">ĐANG TẠO TÀI KHOẢN...</string>
     <string name="register_button">ĐĂNG KÝ</string>
-    <string name="register_error_default">Không thể đăng ký</string>
+    <string name="register_error_default">Không thể đăng ký. Hãy kiểm tra kết nối mạng và thử lại</string>
     <string name="register_verify_title">Xác minh email</string>
     <string name="register_verify_sent">Đã gửi email xác minh tới %1$s.\n\nHãy mở email (kiểm tra cả thư rác), bấm vào liên kết, rồi quay lại đăng nhập.</string>
     <string name="register_verify_not_sent">Tài khoản đã được tạo nhưng chưa gửi được email xác minh.\n\nHãy đăng nhập, app sẽ cho bạn gửi lại.</string>
     <string name="register_go_login">Đến đăng nhập</string>
+    <string name="error_network">Không có kết nối mạng. Hãy kiểm tra Wi-Fi hoặc dữ liệu di động rồi thử lại</string>
+    <string name="error_too_many">Bạn đã thử quá nhiều lần. Vui lòng đợi một lúc rồi thử lại</string>
+    <string name="login_disabled">Tài khoản này đã bị vô hiệu hóa</string>
+    <string name="login_error_generic">Không thể đăng nhập. Hãy kiểm tra kết nối mạng và thử lại</string>
+    <string name="register_email_exists">Email này đã được đăng ký. Hãy đăng nhập, hoặc chọn Quên mật khẩu nếu bạn không nhớ mật khẩu</string>
 </resources>

@@ -1,9 +1,7 @@
 package com.example.qlchitieu.auth;
 
 import android.os.Bundle;
-import android.text.InputType;
 import android.util.Patterns;
-import android.view.MotionEvent;
 import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
@@ -15,6 +13,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.example.qlchitieu.data.repository.UserProfileRepository;
 import com.example.qlchitieu.util.EmailRule;
+import com.example.qlchitieu.util.NetworkUtil;
 import com.example.qlchitieu.util.PasswordRule;
 
 import java.util.HashMap;
@@ -42,8 +41,6 @@ public class RegisterActivity extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         userProfileRepository = new UserProfileRepository(this);
 
-        caiDatHienAnMatKhau(edtMatKhau);
-        caiDatHienAnMatKhau(edtXacNhanMatKhau);
 
         btnDangKy.setOnClickListener(v -> dangKyTaiKhoan());
         // Login luôn nằm ngay dưới Register trong back stack nên chỉ cần đóng màn này
@@ -88,6 +85,11 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
+        if (!NetworkUtil.coMang(this)) {
+            Toast.makeText(this, getString(R.string.error_network), Toast.LENGTH_LONG).show();
+            return;
+        }
+
         btnDangKy.setEnabled(false);
         btnDangKy.setText(getString(R.string.register_creating));
 
@@ -98,9 +100,7 @@ public class RegisterActivity extends AppCompatActivity {
                         btnDangKy.setEnabled(true);
                         btnDangKy.setText(getString(R.string.register_button));
 
-                        String loi = task.getException() != null
-                                ? task.getException().getMessage()
-                                : getString(R.string.register_error_default);
+                        String loi = getString(AuthErrorMapper.choDangKy(task.getException()));
 
                         Toast.makeText(this, loi, Toast.LENGTH_LONG).show();
                         return;
@@ -140,57 +140,5 @@ public class RegisterActivity extends AppCompatActivity {
                 .setCancelable(false)
                 .setPositiveButton(getString(R.string.register_go_login), (dialog, which) -> finish())
                 .show();
-    }
-
-    private void caiDatHienAnMatKhau(EditText editText) {
-
-        final boolean[] hienMatKhau = {false};
-
-        editText.setOnTouchListener((v, event) -> {
-
-            if (event.getAction() == MotionEvent.ACTION_UP) {
-
-                android.graphics.drawable.Drawable icon =
-                        editText.getCompoundDrawablesRelative()[2];
-
-                if (icon != null) {
-
-                    int viTriIcon = editText.getWidth()
-                            - editText.getPaddingEnd()
-                            - icon.getBounds().width();
-
-                    if (event.getX() >= viTriIcon) {
-
-                        hienMatKhau[0] = !hienMatKhau[0];
-
-                        if (hienMatKhau[0]) {
-                            editText.setInputType(
-                                    InputType.TYPE_CLASS_TEXT |
-                                            InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                            );
-                        } else {
-                            editText.setInputType(
-                                    InputType.TYPE_CLASS_TEXT |
-                                            InputType.TYPE_TEXT_VARIATION_PASSWORD
-                            );
-                        }
-
-                        editText.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                R.drawable.ic_lock,
-                                0,
-                                hienMatKhau[0]
-                                        ? R.drawable.ic_eye
-                                        : R.drawable.ic_eye_off,
-                                0
-                        );
-
-                        editText.setSelection(editText.length());
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        });
     }
 }

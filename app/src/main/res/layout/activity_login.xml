@@ -117,24 +117,35 @@
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
-            <EditText
-                android:id="@+id/edtMatKhauDangNhap"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilMatKhauDangNhap"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_input"
-                android:drawableStart="@drawable/ic_lock"
-                android:drawableEnd="@drawable/ic_eye_off"
-                android:drawablePadding="12dp"
-                android:hint="Nhập mật khẩu"
-                android:inputType="textPassword"
-                android:autofillHints="password"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
-                android:singleLine="true"
-                android:textColor="#122341"
-                android:textColorHint="#8493AA"
-                android:textSize="14sp" />
+                app:boxBackgroundMode="none"
+                app:endIconMode="password_toggle"
+                app:endIconTint="#8493AA"
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edtMatKhauDangNhap"
+                    android:layout_height="52dp"
+                    android:background="@null"
+                    android:layout_width="match_parent"
+                    android:drawableStart="@drawable/ic_lock"
+                    android:drawablePadding="12dp"
+                    android:hint="Nhập mật khẩu"
+                    android:inputType="textPassword"
+                    android:autofillHints="password"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:singleLine="true"
+                    android:textColor="#122341"
+                    android:textColorHint="#8493AA"
+                    android:textSize="14sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
                 android:id="@+id/tvQuenMatKhau"
