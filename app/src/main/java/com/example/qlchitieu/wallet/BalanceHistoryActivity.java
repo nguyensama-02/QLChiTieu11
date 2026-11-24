@@ -44,6 +44,7 @@ public class BalanceHistoryActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_balance_history);
+        com.example.qlchitieu.util.InsetsUtil.apply(this);
 
         tvQuayLaiLichSuDieuChinh =
                 findViewById(R.id.tvQuayLaiLichSuDieuChinh);

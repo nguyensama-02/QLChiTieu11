@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
-    android:background="@drawable/bg_auth_card"
+    android:background="@drawable/bg_card_soft"
     android:orientation="vertical"
-    android:padding="18dp">
+    android:padding="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,90 +14,122 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/tvLyDoItem"
+        <ImageView
+            android:id="@+id/ivHuongDieuChinh"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/bg_icon_circle"
+            android:contentDescription="@null"
+            android:padding="9dp"
+            android:src="@drawable/ic_arrow_up" />
+
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
             android:layout_weight="1"
-            android:layout_marginEnd="10dp"
-            android:text="Kiểm kê tiền mặt"
-            android:textColor="#102A4C"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvLyDoItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:text="Kiểm kê tiền mặt"
+                android:textColor="@color/phinova_text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvNgayDieuChinhItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="24/10/2026 09:30"
+                android:textColor="@color/phinova_text_hint"
+                android:textSize="12sp" />
+
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvChenhLechItem"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="+40.000 ₫"
-            android:textColor="#059669"
+            android:textColor="@color/phinova_income"
             android:textSize="15sp"
             android:textStyle="bold" />
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/tvNgayDieuChinhItem"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="24/10/2026 09:30"
-        android:textColor="#94A3B8"
-        android:textSize="12sp" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
-        android:background="#E8EDF5" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_marginTop="14dp"
+        android:background="@drawable/bg_balance_box"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
 
-        <TextView
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Số dư trước"
-            android:textColor="#64748B"
-            android:textSize="14sp" />
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvSoDuCuItem"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="910.000 ₫"
-            android:textColor="#102A4C"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Số dư trước"
+                android:textColor="@color/phinova_text_hint"
+                android:textSize="11sp" />
 
-    </LinearLayout>
+            <TextView
+                android:id="@+id/tvSoDuCuItem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="910.000 ₫"
+                android:textColor="@color/phinova_text_secondary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:orientation="horizontal">
+        </LinearLayout>
 
-        <TextView
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_chevron_right"
+            app:tint="@color/phinova_text_hint" />
+
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Số dư sau"
-            android:textColor="#64748B"
-            android:textSize="14sp" />
+            android:gravity="end"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvSoDuMoiItem"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="950.000 ₫"
-            android:textColor="#102A4C"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Số dư sau"
+                android:textColor="@color/phinova_text_hint"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/tvSoDuMoiItem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="950.000 ₫"
+                android:textColor="@color/phinova_text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

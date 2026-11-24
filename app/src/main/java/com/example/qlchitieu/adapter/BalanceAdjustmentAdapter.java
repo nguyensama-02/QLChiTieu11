@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -64,19 +65,32 @@ public class BalanceAdjustmentAdapter extends RecyclerView.Adapter<BalanceAdjust
                 dau + dinhDangTien.format(chenhLech) + " ₫"
         );
 
+        int mauChu;
+        int mauNen;
+        int icon;
+
         if (chenhLech > 0) {
-            holder.tvChenhLechItem.setTextColor(
-                    Color.parseColor("#059669")
-            );
+            mauChu = Color.parseColor("#059669");
+            mauNen = Color.parseColor("#DCFCE7");
+            icon = R.drawable.ic_arrow_up;
         } else if (chenhLech < 0) {
-            holder.tvChenhLechItem.setTextColor(
-                    Color.parseColor("#DC2626")
-            );
+            mauChu = Color.parseColor("#DC2626");
+            mauNen = Color.parseColor("#FEE2E2");
+            icon = R.drawable.ic_arrow_down;
         } else {
-            holder.tvChenhLechItem.setTextColor(
-                    Color.parseColor("#102A4C")
-            );
+            mauChu = Color.parseColor("#102A4C");
+            mauNen = Color.parseColor("#E8EDF5");
+            icon = R.drawable.ic_equal;
         }
+
+        holder.tvChenhLechItem.setTextColor(mauChu);
+        holder.ivHuongDieuChinh.setImageResource(icon);
+        holder.ivHuongDieuChinh.setImageTintList(
+                android.content.res.ColorStateList.valueOf(mauChu)
+        );
+        holder.ivHuongDieuChinh.setBackgroundTintList(
+                android.content.res.ColorStateList.valueOf(mauNen)
+        );
 
         holder.tvSoDuCuItem.setText(
                 dinhDangTien.format(dieuChinh.getSoDuCu()) + " ₫"
@@ -110,6 +124,7 @@ public class BalanceAdjustmentAdapter extends RecyclerView.Adapter<BalanceAdjust
         TextView tvNgayDieuChinhItem;
         TextView tvSoDuCuItem;
         TextView tvSoDuMoiItem;
+        ImageView ivHuongDieuChinh;
 
         public AdjustmentViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -119,6 +134,7 @@ public class BalanceAdjustmentAdapter extends RecyclerView.Adapter<BalanceAdjust
             tvNgayDieuChinhItem = itemView.findViewById(R.id.tvNgayDieuChinhItem);
             tvSoDuCuItem = itemView.findViewById(R.id.tvSoDuCuItem);
             tvSoDuMoiItem = itemView.findViewById(R.id.tvSoDuMoiItem);
+            ivHuongDieuChinh = itemView.findViewById(R.id.ivHuongDieuChinh);
         }
     }
 }

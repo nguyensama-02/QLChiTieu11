@@ -47,6 +47,7 @@ public class AdjustBalanceActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_adjust_balance);
+        com.example.qlchitieu.util.InsetsUtil.apply(this);
 
         tvQuayLaiDieuChinh = findViewById(R.id.tvQuayLaiDieuChinh);
         tvSoDuHienTai = findViewById(R.id.tvSoDuHienTai);

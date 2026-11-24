@@ -3,6 +3,7 @@ package com.example.qlchitieu.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.content.Intent;
 import androidx.annotation.NonNull;
@@ -10,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.qlchitieu.R;
 import com.example.qlchitieu.model.Wallet;
+import com.example.qlchitieu.util.WalletUi;
 import com.example.qlchitieu.wallet.WalletDetailActivity;
 
 import java.text.NumberFormat;
@@ -61,13 +63,15 @@ public class WalletAdapter extends RecyclerView.Adapter<WalletAdapter.WalletView
                 dinhDang.format(vi.getSoDu()) + " ₫"
         );
 
-        if (vi.getLoaiVi().equals("Tiền mặt")) {
-            holder.tvBieuTuongVi.setText("₫");
-        } else if (vi.getLoaiVi().equals("Ngân hàng")) {
-            holder.tvBieuTuongVi.setText("▣");
-        } else {
-            holder.tvBieuTuongVi.setText("◈");
-        }
+        WalletUi.gan(holder.ivBieuTuongVi, vi.getLoaiVi());
+
+        boolean daLuuTru = "LUU_TRU".equals(vi.getTrangThai());
+
+        holder.tvTrangThaiItem.setVisibility(
+                daLuuTru ? View.VISIBLE : View.GONE
+        );
+
+        holder.itemView.setAlpha(daLuuTru ? 0.7f : 1f);
     }
 
     @Override
@@ -77,7 +81,8 @@ public class WalletAdapter extends RecyclerView.Adapter<WalletAdapter.WalletView
 
     public static class WalletViewHolder extends RecyclerView.ViewHolder {
 
-        TextView tvTenViItem, tvLoaiViItem, tvSoDuViItem, tvBieuTuongVi;
+        TextView tvTenViItem, tvLoaiViItem, tvSoDuViItem, tvTrangThaiItem;
+        ImageView ivBieuTuongVi;
 
         public WalletViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -85,7 +90,8 @@ public class WalletAdapter extends RecyclerView.Adapter<WalletAdapter.WalletView
             tvTenViItem = itemView.findViewById(R.id.tvTenViItem);
             tvLoaiViItem = itemView.findViewById(R.id.tvLoaiViItem);
             tvSoDuViItem = itemView.findViewById(R.id.tvSoDuViItem);
-            tvBieuTuongVi = itemView.findViewById(R.id.tvBieuTuongVi);
+            ivBieuTuongVi = itemView.findViewById(R.id.ivBieuTuongVi);
+            tvTrangThaiItem = itemView.findViewById(R.id.tvTrangThaiItem);
         }
     }
 }

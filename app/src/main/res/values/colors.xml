@@ -39,4 +39,17 @@
     <color name="phinova_expense_bg">#FEE2E2</color>
     <color name="phinova_warning_bg">#FFF7ED</color>
 
+
+    <!-- Wallet UI -->
+    <color name="wallet_cash">#059669</color>
+    <color name="wallet_cash_bg">#DCFCE7</color>
+    <color name="wallet_bank">#2563EB</color>
+    <color name="wallet_bank_bg">#DBEAFE</color>
+    <color name="wallet_ewallet">#7C3AED</color>
+    <color name="wallet_ewallet_bg">#EDE9FE</color>
+    <color name="wallet_other_bg">#E0F2FE</color>
+    <color name="wallet_soft_bg">#F1F5F9</color>
+    <color name="wallet_disabled_bg">#EEF2F7</color>
+    <color name="wallet_disabled_fg">#B6C0CF</color>
+
 </resources>

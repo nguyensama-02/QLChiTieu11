@@ -1,47 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
-    android:background="@drawable/bg_auth_card"
-    android:orientation="horizontal"
+    android:background="@drawable/bg_card_soft"
+    android:foreground="?attr/selectableItemBackground"
     android:gravity="center_vertical"
-    android:padding="18dp">
+    android:orientation="horizontal"
+    android:padding="16dp">
 
-    <TextView
-        android:id="@+id/tvBieuTuongVi"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:gravity="center"
-        android:text="▣"
-        android:textSize="28sp"
-        android:textColor="#0891B2"
-        android:background="@drawable/bg_input" />
+    <ImageView
+        android:id="@+id/ivBieuTuongVi"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/bg_icon_rounded"
+        android:contentDescription="@null"
+        android:padding="13dp"
+        android:src="@drawable/ic_cash" />
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:layout_marginStart="14dp"
+        android:layout_weight="1"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/tvTenViItem"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:text="Tiền mặt"
-            android:textColor="#102A4C"
+            android:textColor="@color/phinova_text_primary"
             android:textSize="16sp"
             android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/tvLoaiViItem"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
-            android:text="Tiền mặt"
-            android:textColor="#94A3B8"
-            android:textSize="12sp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvLoaiViItem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tiền mặt"
+                android:textColor="@color/phinova_text_hint"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvTrangThaiItem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_chip_archived"
+                android:paddingStart="8dp"
+                android:paddingTop="2dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="2dp"
+                android:text="Đã lưu trữ"
+                android:textColor="@color/phinova_text_secondary"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -51,8 +78,16 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:text="1.000.000 ₫"
-        android:textColor="#102A4C"
+        android:textColor="@color/phinova_text_primary"
         android:textSize="16sp"
         android:textStyle="bold" />
+
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="4dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_chevron_right"
+        app:tint="@color/phinova_text_hint" />
 
 </LinearLayout>

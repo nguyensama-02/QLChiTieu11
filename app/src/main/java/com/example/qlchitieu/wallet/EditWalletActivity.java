@@ -40,6 +40,7 @@ public class EditWalletActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_wallet);
+        com.example.qlchitieu.util.InsetsUtil.apply(this);
 
         edtTenViSua = findViewById(R.id.edtTenViSua);
         spLoaiViSua = findViewById(R.id.spLoaiViSua);
@@ -54,12 +55,12 @@ public class EditWalletActivity extends AppCompatActivity {
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
-                android.R.layout.simple_spinner_item,
+                R.layout.item_spinner,
                 danhSachLoaiVi
         );
 
         adapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item
+                R.layout.item_spinner_dropdown
         );
 
         spLoaiViSua.setAdapter(adapter);

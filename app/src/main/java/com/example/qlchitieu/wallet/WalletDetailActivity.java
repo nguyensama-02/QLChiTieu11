@@ -3,6 +3,7 @@ package com.example.qlchitieu.wallet;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +26,8 @@ public class WalletDetailActivity extends AppCompatActivity {
     TextView tvQuayLaiChiTietVi;
     TextView tvSoDuChiTietVi, tvTenViTieuDe;
     TextView tvTenViChiTiet, tvLoaiViChiTiet, tvTrangThaiVi;
+    TextView tvLoaiViTieuDe;
+    ImageView ivBieuTuongChiTiet;
 
     MaterialButton btnSuaVi, btnDieuChinhSoDu;
     MaterialButton btnLichSuDieuChinh, btnQuanLyVi;
@@ -46,6 +49,7 @@ public class WalletDetailActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wallet_detail);
+        com.example.qlchitieu.util.InsetsUtil.apply(this);
 
         tvQuayLaiChiTietVi = findViewById(R.id.tvQuayLaiChiTietVi);
         tvSoDuChiTietVi = findViewById(R.id.tvSoDuChiTietVi);
@@ -53,6 +57,8 @@ public class WalletDetailActivity extends AppCompatActivity {
         tvTenViChiTiet = findViewById(R.id.tvTenViChiTiet);
         tvLoaiViChiTiet = findViewById(R.id.tvLoaiViChiTiet);
         tvTrangThaiVi = findViewById(R.id.tvTrangThaiVi);
+        tvLoaiViTieuDe = findViewById(R.id.tvLoaiViTieuDe);
+        ivBieuTuongChiTiet = findViewById(R.id.ivBieuTuongChiTiet);
 
         btnSuaVi = findViewById(R.id.btnSuaVi);
         btnDieuChinhSoDu = findViewById(R.id.btnDieuChinhSoDu);
@@ -181,11 +187,16 @@ public class WalletDetailActivity extends AppCompatActivity {
         tvTenViTieuDe.setText(vi.getTenVi());
         tvTenViChiTiet.setText(vi.getTenVi());
         tvLoaiViChiTiet.setText(loaiVi);
+        tvLoaiViTieuDe.setText(loaiVi);
+        ivBieuTuongChiTiet.setImageResource(
+                com.example.qlchitieu.util.WalletUi.icon(loaiVi)
+        );
 
         if ("LUU_TRU".equals(vi.getTrangThai())) {
             trangThaiVi = "LUU_TRU";
 
             tvTrangThaiVi.setText("Đã lưu trữ");
+            tvTrangThaiVi.setBackgroundResource(R.drawable.bg_chip_archived);
             tvTrangThaiVi.setTextColor(
                     Color.parseColor("#64748B")
             );
@@ -194,6 +205,7 @@ public class WalletDetailActivity extends AppCompatActivity {
             trangThaiVi = "HOAT_DONG";
 
             tvTrangThaiVi.setText("Đang sử dụng");
+            tvTrangThaiVi.setBackgroundResource(R.drawable.bg_chip_ok);
             tvTrangThaiVi.setTextColor(
                     Color.parseColor("#059669")
             );

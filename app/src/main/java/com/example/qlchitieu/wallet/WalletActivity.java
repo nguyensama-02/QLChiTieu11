@@ -52,6 +52,7 @@ public class WalletActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wallet);
+        com.example.qlchitieu.util.InsetsUtil.apply(this);
 
         tvQuayLai = findViewById(R.id.tvQuayLai);
         tvTongTienVi = findViewById(R.id.tvTongTienVi);
@@ -197,29 +198,29 @@ public class WalletActivity extends AppCompatActivity {
 
     private void capNhatGiaoDienTab() {
 
-        int mauXanh = Color.parseColor("#2563EB");
-        int mauTrang = Color.WHITE;
-        int mauNen = Color.parseColor("#E8EDF5");
-        int mauChu = Color.parseColor("#64748B");
+        int mauChon = Color.WHITE;
+        int mauKhongChon = Color.TRANSPARENT;
+        int chuChon = Color.parseColor("#102A4C");
+        int chuKhongChon = Color.parseColor("#64748B");
 
         btnViHoatDong.setBackgroundTintList(
                 ColorStateList.valueOf(
-                        dangXemViLuuTru ? mauNen : mauXanh
+                        dangXemViLuuTru ? mauKhongChon : mauChon
                 )
         );
 
         btnViHoatDong.setTextColor(
-                dangXemViLuuTru ? mauChu : mauTrang
+                dangXemViLuuTru ? chuKhongChon : chuChon
         );
 
         btnViLuuTru.setBackgroundTintList(
                 ColorStateList.valueOf(
-                        dangXemViLuuTru ? mauXanh : mauNen
+                        dangXemViLuuTru ? mauChon : mauKhongChon
                 )
         );
 
         btnViLuuTru.setTextColor(
-                dangXemViLuuTru ? mauTrang : mauChu
+                dangXemViLuuTru ? chuChon : chuKhongChon
         );
     }
 }

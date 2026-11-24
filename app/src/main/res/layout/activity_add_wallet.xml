@@ -3,8 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/phinova_background"
     android:fillViewport="true"
-    android:background="#F5F7FB">
+    android:overScrollMode="never">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -12,36 +13,47 @@
         android:orientation="vertical">
 
         <LinearLayout
+            android:id="@+id/layoutHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@drawable/bg_wallet_header"
             android:orientation="vertical"
-            android:background="@drawable/bg_auth_gradient"
-            android:padding="24dp">
+            android:paddingStart="20dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="30dp">
 
-            <TextView
-                android:id="@+id/tvQuayLaiThemVi"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:text="‹  Quay lại"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp" />
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvQuayLaiThemVi"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/bg_back_button"
+                    android:contentDescription="Quay lại" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:text="Thêm ví mới"
+                    android:textColor="@color/white"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Thêm ví mới"
-                android:textColor="#FFFFFF"
-                android:textSize="27sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="14dp"
                 android:text="Tạo ví để bắt đầu quản lý tài chính"
-                android:textColor="#C5D7EB"
+                android:textColor="#B8CCE6"
                 android:textSize="14sp" />
 
         </LinearLayout>
@@ -49,98 +61,107 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="20dp"
+            android:background="@drawable/bg_card_soft"
             android:orientation="vertical"
-            android:padding="22dp"
-            android:background="@drawable/bg_auth_card">
+            android:padding="22dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="0dp"
                 android:text="Tên ví"
-                android:textColor="#102A4C"
-                android:textSize="15sp"
+                android:textColor="@color/phinova_text_primary"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/edtTenVi"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
                 android:background="@drawable/bg_input"
                 android:hint="Ví dụ: Tiền mặt, Vietcombank..."
                 android:inputType="textCapSentences"
-                android:singleLine="true"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:textColor="#102A4C"
-                android:textColorHint="#94A3B8"
-                android:textSize="14sp" />
+                android:textColor="@color/phinova_text_primary"
+                android:textColorHint="@color/phinova_text_hint"
+                android:textSize="15sp"
+                android:singleLine="true"
+                />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="22dp"
                 android:text="Loại ví"
-                android:textColor="#102A4C"
-                android:textSize="15sp"
+                android:textColor="@color/phinova_text_primary"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <Spinner
                 android:id="@+id/spLoaiVi"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_input"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp" />
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_spinner"
+                android:popupBackground="@drawable/bg_card_soft"
+                android:spinnerMode="dropdown" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="22dp"
                 android:text="Số dư ban đầu (VNĐ)"
-                android:textColor="#102A4C"
-                android:textSize="15sp"
+                android:textColor="@color/phinova_text_primary"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/edtSoDuBanDau"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
                 android:background="@drawable/bg_input"
-                android:hint="Nhập số tiền, ví dụ: 500000"
+                android:hint="Ví dụ: 500000"
                 android:inputType="number"
-                android:singleLine="true"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:textColor="#102A4C"
-                android:textColorHint="#94A3B8"
-                android:textSize="14sp" />
+                android:textColor="@color/phinova_text_primary"
+                android:textColorHint="@color/phinova_text_hint"
+                android:textSize="15sp"
+                android:singleLine="true"
+                />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="10dp"
                 android:text="Số dư ban đầu có thể bằng 0 ₫"
-                android:textColor="#94A3B8"
+                android:textColor="@color/phinova_text_hint"
                 android:textSize="12sp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLuuVi"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="28dp"
                 android:text="Lưu ví tiền"
                 android:textAllCaps="false"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                app:backgroundTint="#0891B2"
+                app:backgroundTint="@color/phinova_accent"
                 app:cornerRadius="16dp" />
 
         </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="24dp" />
 
     </LinearLayout>
 
