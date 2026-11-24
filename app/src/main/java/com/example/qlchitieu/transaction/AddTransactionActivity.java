@@ -3,6 +3,7 @@ package com.example.qlchitieu.transaction;
 import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.text.NumberFormat;
 
 public class AddTransactionActivity extends AppCompatActivity {
 
@@ -34,7 +36,7 @@ public class AddTransactionActivity extends AppCompatActivity {
     LinearLayout layoutViDich, layoutDanhMuc;
 
     TextView tvQuayLaiGiaoDich, tvNhanViNguon;
-    TextView tvNgayGiaoDich;
+    TextView tvNgayGiaoDich, tvSoDuViNguon, tvSoDuViDich;
 
     Spinner spViNguon, spViDich, spDanhMuc;
 
@@ -67,6 +69,8 @@ public class AddTransactionActivity extends AppCompatActivity {
         tvNgayGiaoDich = findViewById(R.id.tvNgayGiaoDich);
         tvQuayLaiGiaoDich = findViewById(R.id.tvQuayLaiGiaoDich);
         tvNhanViNguon = findViewById(R.id.tvNhanViNguon);
+        tvSoDuViNguon = findViewById(R.id.tvSoDuViNguon);
+        tvSoDuViDich = findViewById(R.id.tvSoDuViDich);
 
         edtSoTienGiaoDich = findViewById(R.id.edtSoTienGiaoDich);
         edtGhiChu = findViewById(R.id.edtGhiChu);
@@ -96,6 +100,30 @@ public class AddTransactionActivity extends AppCompatActivity {
 
         spViNguon.setAdapter(adapterVi);
         spViDich.setAdapter(adapterVi);
+
+        spViNguon.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                capNhatSoDuViNguon();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                tvSoDuViNguon.setText("Số dư hiện tại: --");
+            }
+        });
+
+        spViDich.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                capNhatSoDuViDich();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                tvSoDuViDich.setText("Số dư hiện tại: --");
+            }
+        });
 
         ngayDuocChon = Calendar.getInstance();
 
@@ -230,6 +258,9 @@ public class AddTransactionActivity extends AppCompatActivity {
 
         chonLaiVi(spViNguon, maViNguonDangChon);
         chonLaiVi(spViDich, maViDichDangChon);
+
+        capNhatSoDuViNguon();
+        capNhatSoDuViDich();
     }
 
     private String layMaViDangChon(Spinner spinner) {
@@ -253,6 +284,35 @@ public class AddTransactionActivity extends AppCompatActivity {
                 return;
             }
         }
+    }
+
+    private void capNhatSoDuViNguon() {
+        int viTri = spViNguon.getSelectedItemPosition();
+
+        if (viTri < 0 || viTri >= danhSachVi.size()) {
+            tvSoDuViNguon.setText("Số dư hiện tại: --");
+            return;
+        }
+
+        Wallet vi = danhSachVi.get(viTri);
+        tvSoDuViNguon.setText("Số dư hiện tại: " + dinhDangTien(vi.getSoDu()));
+    }
+
+    private void capNhatSoDuViDich() {
+        int viTri = spViDich.getSelectedItemPosition();
+
+        if (viTri < 0 || viTri >= danhSachVi.size()) {
+            tvSoDuViDich.setText("Số dư hiện tại: --");
+            return;
+        }
+
+        Wallet vi = danhSachVi.get(viTri);
+        tvSoDuViDich.setText("Số dư hiện tại: " + dinhDangTien(vi.getSoDu()));
+    }
+
+    private String dinhDangTien(long soTien) {
+        NumberFormat dinhDang = NumberFormat.getInstance(new Locale("vi", "VN"));
+        return dinhDang.format(soTien) + " ₫";
     }
 
     private void taiDanhMuc(String loaiGiaoDich) {
