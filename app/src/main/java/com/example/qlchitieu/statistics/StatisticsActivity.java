@@ -14,7 +14,7 @@ import android.widget.PopupMenu;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import android.app.DatePickerDialog;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -70,6 +70,7 @@ public class StatisticsActivity extends AppCompatActivity {
     // Kỳ thống kê đang xem
     private static final int KY_THANG = 0;
     private static final int KY_30_NGAY = 1;
+    private static final int KY_TUY_CHINH = 2;
 
     private static final int SO_NGAY_KY_NGAN = 30;
     private static final int SO_NGAY_MOT_TUAN = 7;
@@ -133,6 +134,8 @@ public class StatisticsActivity extends AppCompatActivity {
     int lanDongBo = 0;
 
     Calendar thangDuocChon;
+    Calendar ngayBatDauTuyChinh;
+    Calendar ngayKetThucTuyChinh;
 
     // Bộ lọc đang áp dụng cho cả màn hình
     String maViDangChon = null;               // null = tất cả ví
@@ -227,12 +230,42 @@ public class StatisticsActivity extends AppCompatActivity {
     // ------------------------------------------------------------------
 
     /** Cập nhật khối chọn thời gian ở đầu màn hình theo kỳ đang xem. */
+//    private void hienThiKy() {
+//
+//        boolean laThang = (kyDangChon == KY_THANG);
+//
+//        tvThangTruoc.setVisibility(laThang ? View.VISIBLE : View.GONE);
+//        tvThangSau.setVisibility(laThang ? View.VISIBLE : View.GONE);
+//        tvChonThang.setClickable(laThang);
+//        tvChonThang.setFocusable(laThang);
+//
+//        if (laThang) {
+//
+//            int thang = thangDuocChon.get(Calendar.MONTH) + 1;
+//            int nam = thangDuocChon.get(Calendar.YEAR);
+//
+//            tvChonThang.setText("Tháng " + thang + "/" + nam + "  ▾");
+//
+//            // Không cho đi tiếp quá tháng hiện tại (chưa có dữ liệu)
+//            tvThangSau.setAlpha(laThangMoiNhat() ? 0.3f : 1f);
+//
+//        } else {
+//
+//            Ky ky = tinhKy();
+//            SimpleDateFormat dd = new SimpleDateFormat("dd/MM", Locale.getDefault());
+//
+//            tvChonThang.setText("30 ngày qua · " + dd.format(new Date(ky.tuNgay))
+//                    + " – " + dd.format(new Date(ky.denNgay - 1)));
+//        }
+//    }
     private void hienThiKy() {
 
         boolean laThang = (kyDangChon == KY_THANG);
+        boolean laTuyChinh = (kyDangChon == KY_TUY_CHINH);
 
         tvThangTruoc.setVisibility(laThang ? View.VISIBLE : View.GONE);
         tvThangSau.setVisibility(laThang ? View.VISIBLE : View.GONE);
+
         tvChonThang.setClickable(laThang);
         tvChonThang.setFocusable(laThang);
 
@@ -242,17 +275,29 @@ public class StatisticsActivity extends AppCompatActivity {
             int nam = thangDuocChon.get(Calendar.YEAR);
 
             tvChonThang.setText("Tháng " + thang + "/" + nam + "  ▾");
-
-            // Không cho đi tiếp quá tháng hiện tại (chưa có dữ liệu)
             tvThangSau.setAlpha(laThangMoiNhat() ? 0.3f : 1f);
+
+        } else if (laTuyChinh) {
+
+            SimpleDateFormat dd = new SimpleDateFormat(
+                    "dd/MM/yyyy", Locale.getDefault());
+
+            tvChonThang.setText(
+                    dd.format(ngayBatDauTuyChinh.getTime())
+                            + " - "
+                            + dd.format(ngayKetThucTuyChinh.getTime())
+            );
 
         } else {
 
             Ky ky = tinhKy();
-            SimpleDateFormat dd = new SimpleDateFormat("dd/MM", Locale.getDefault());
+            SimpleDateFormat dd = new SimpleDateFormat(
+                    "dd/MM", Locale.getDefault());
 
-            tvChonThang.setText("30 ngày qua · " + dd.format(new Date(ky.tuNgay))
-                    + " – " + dd.format(new Date(ky.denNgay - 1)));
+            tvChonThang.setText("30 ngày qua · "
+                    + dd.format(new Date(ky.tuNgay))
+                    + " – "
+                    + dd.format(new Date(ky.denNgay - 1)));
         }
     }
 
@@ -281,6 +326,31 @@ public class StatisticsActivity extends AppCompatActivity {
     private Ky tinhKy() {
 
         Ky ky = new Ky();
+        if (kyDangChon == KY_TUY_CHINH) {
+
+            Calendar tu = (Calendar) ngayBatDauTuyChinh.clone();
+            Calendar den = (Calendar) ngayKetThucTuyChinh.clone();
+
+            den.add(Calendar.DAY_OF_MONTH, 1);
+
+            Calendar tuTruoc = (Calendar) tu.clone();
+            long soNgay = Math.max(1,
+                    (den.getTimeInMillis() - tu.getTimeInMillis())
+                            / (24L * 60 * 60 * 1000));
+
+            tuTruoc.add(Calendar.DAY_OF_MONTH, -(int) soNgay);
+
+            ky.laThang = false;
+            ky.tuNgay = tu.getTimeInMillis();
+            ky.denNgay = den.getTimeInMillis();
+            ky.tuTruoc = tuTruoc.getTimeInMillis();
+            ky.denTruoc = ky.tuNgay;
+            ky.nhanTruoc = "kỳ trước";
+            ky.soNgay = (int) soNgay;
+            ky.ngayDaQua = ky.soNgay;
+
+            return ky;
+        }
 
         if (kyDangChon == KY_THANG) {
 
@@ -330,6 +400,21 @@ public class StatisticsActivity extends AppCompatActivity {
         return ky;
     }
 
+//    private void dungChipKy() {
+//
+//        layoutChonKy.removeAllViews();
+//
+//        GradientDrawable nen = new GradientDrawable();
+//        nen.setShape(GradientDrawable.RECTANGLE);
+//        nen.setCornerRadius(dp(22));
+//        nen.setColor(Color.parseColor("#33FFFFFF"));
+//
+//        layoutChonKy.setBackground(nen);
+//        layoutChonKy.setPadding(dp(3), dp(3), dp(3), dp(3));
+//
+//        layoutChonKy.addView(taoNutKy("Tháng", KY_THANG));
+//        layoutChonKy.addView(taoNutKy("30 ngày", KY_30_NGAY));
+//    }
     private void dungChipKy() {
 
         layoutChonKy.removeAllViews();
@@ -344,6 +429,7 @@ public class StatisticsActivity extends AppCompatActivity {
 
         layoutChonKy.addView(taoNutKy("Tháng", KY_THANG));
         layoutChonKy.addView(taoNutKy("30 ngày", KY_30_NGAY));
+        layoutChonKy.addView(taoNutKy("Tùy chỉnh", KY_TUY_CHINH));
     }
 
     private TextView taoNutKy(String nhan, int ky) {
@@ -373,7 +459,16 @@ public class StatisticsActivity extends AppCompatActivity {
         }
 
         nut.setBackground(nenNut);
-        nut.setOnClickListener(v -> chonKy(ky));
+//        nut.setOnClickListener(v -> chonKy(ky));
+        nut.setOnClickListener(v -> {
+
+            if (ky == KY_TUY_CHINH) {
+                chonKhoangNgayTuyChinh();
+            } else {
+                chonKy(ky);
+            }
+
+        });
 
         nut.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, dp(38)));
@@ -398,25 +493,58 @@ public class StatisticsActivity extends AppCompatActivity {
     }
 
     /** Đổi các tiêu đề đang ghi sẵn "tháng" cho đúng kỳ. */
+//    private void capNhatNhanKy() {
+//
+//        boolean laThang = (kyDangChon == KY_THANG);
+//
+//        tvNhanConLai.setText(laThang
+//                ? "Còn lại trong tháng"
+//                : "Còn lại trong 30 ngày");
+//
+//        tvTieuDeXuHuong.setText(laThang
+//                ? "Xu hướng 6 tháng"
+//                : "Theo tuần trong 30 ngày qua");
+//
+//        tvPhuDeXuHuong.setText(laThang
+//                ? "Thu nhập và chi tiêu, đơn vị triệu đồng"
+//                : "Mỗi cột 7 ngày tính lùi từ hôm nay, cột đầu có thể ngắn hơn. Đơn vị triệu đồng");
+//
+//        tvPhuDeNhipChiTieu.setText(laThang
+//                ? "Chi tiêu theo từng ngày trong tháng"
+//                : "Chi tiêu theo từng ngày trong 30 ngày qua");
+//    }
     private void capNhatNhanKy() {
 
         boolean laThang = (kyDangChon == KY_THANG);
+        boolean laTuyChinh = (kyDangChon == KY_TUY_CHINH);
 
-        tvNhanConLai.setText(laThang
-                ? "Còn lại trong tháng"
-                : "Còn lại trong 30 ngày");
+        if (laThang) {
 
-        tvTieuDeXuHuong.setText(laThang
-                ? "Xu hướng 6 tháng"
-                : "Theo tuần trong 30 ngày qua");
+            tvNhanConLai.setText("Còn lại trong tháng");
+            tvTieuDeXuHuong.setText("Xu hướng 6 tháng");
+            tvPhuDeXuHuong.setText(
+                    "Thu nhập và chi tiêu, đơn vị triệu đồng");
+            tvPhuDeNhipChiTieu.setText(
+                    "Chi tiêu theo từng ngày trong tháng");
 
-        tvPhuDeXuHuong.setText(laThang
-                ? "Thu nhập và chi tiêu, đơn vị triệu đồng"
-                : "Mỗi cột 7 ngày tính lùi từ hôm nay, cột đầu có thể ngắn hơn. Đơn vị triệu đồng");
+        } else if (laTuyChinh) {
 
-        tvPhuDeNhipChiTieu.setText(laThang
-                ? "Chi tiêu theo từng ngày trong tháng"
-                : "Chi tiêu theo từng ngày trong 30 ngày qua");
+            tvNhanConLai.setText("Còn lại trong khoảng đã chọn");
+            tvTieuDeXuHuong.setText("Xu hướng theo tuần");
+            tvPhuDeXuHuong.setText(
+                    "Thu nhập và chi tiêu, đơn vị triệu đồng");
+            tvPhuDeNhipChiTieu.setText(
+                    "Chi tiêu theo từng ngày trong khoảng đã chọn");
+
+        } else {
+
+            tvNhanConLai.setText("Còn lại trong 30 ngày");
+            tvTieuDeXuHuong.setText("Theo tuần trong 30 ngày qua");
+            tvPhuDeXuHuong.setText(
+                    "Mỗi cột 7 ngày tính lùi từ hôm nay, cột đầu có thể ngắn hơn. Đơn vị triệu đồng");
+            tvPhuDeNhipChiTieu.setText(
+                    "Chi tiêu theo từng ngày trong 30 ngày qua");
+        }
     }
 
     private boolean laThangMoiNhat() {
@@ -531,7 +659,113 @@ public class StatisticsActivity extends AppCompatActivity {
                 })
                 .show();
     }
+    private void chonKhoangNgayTuyChinh() {
 
+        Calendar homNay = Calendar.getInstance();
+        khongGio(homNay);
+
+        Calendar ngayMacDinh = (Calendar) homNay.clone();
+        ngayMacDinh.add(Calendar.MONTH, -1);
+
+        Calendar batDau = ngayBatDauTuyChinh == null
+                ? ngayMacDinh
+                : (Calendar) ngayBatDauTuyChinh.clone();
+
+        DatePickerDialog dialog = new DatePickerDialog(
+                this,
+                (view, year, month, dayOfMonth) -> {
+
+                    Calendar ngayChon = Calendar.getInstance();
+                    ngayChon.set(year, month, dayOfMonth);
+                    khongGio(ngayChon);
+
+                    ngayBatDauTuyChinh = ngayChon;
+
+                    chonNgayKetThucTuyChinh();
+
+                },
+                batDau.get(Calendar.YEAR),
+                batDau.get(Calendar.MONTH),
+                batDau.get(Calendar.DAY_OF_MONTH)
+        );
+
+        dialog.getDatePicker().setMaxDate(homNay.getTimeInMillis());
+
+        dialog.setTitle("Chọn ngày bắt đầu");
+        dialog.show();
+    }
+
+    private void chonNgayKetThucTuyChinh() {
+
+        Calendar homNay = Calendar.getInstance();
+        khongGio(homNay);
+
+        Calendar ngayMax = (Calendar) ngayBatDauTuyChinh.clone();
+        ngayMax.add(Calendar.MONTH, 3);
+        ngayMax.add(Calendar.DAY_OF_MONTH, -1);
+
+        if (ngayMax.after(homNay)) {
+            ngayMax = (Calendar) homNay.clone();
+        }
+
+        Calendar ngayMacDinh = (Calendar) homNay.clone();
+
+        if (ngayMacDinh.after(ngayMax)) {
+            ngayMacDinh = (Calendar) ngayMax.clone();
+        }
+
+        if (ngayMacDinh.before(ngayBatDauTuyChinh)) {
+            ngayMacDinh = (Calendar) ngayBatDauTuyChinh.clone();
+        }
+
+        DatePickerDialog dialog = new DatePickerDialog(
+                this,
+                (view, year, month, dayOfMonth) -> {
+
+                    Calendar ngayChon = Calendar.getInstance();
+                    ngayChon.set(year, month, dayOfMonth);
+                    khongGio(ngayChon);
+
+                    Calendar gioiHan = (Calendar) ngayBatDauTuyChinh.clone();
+                    gioiHan.add(Calendar.MONTH, 3);
+
+                    if (!ngayChon.before(ngayBatDauTuyChinh)
+                            && ngayChon.before(gioiHan)) {
+
+                        ngayKetThucTuyChinh = ngayChon;
+
+                        kyDangChon = KY_TUY_CHINH;
+
+                        dungChipKy();
+                        hienThiKy();
+                        capNhatNhanKy();
+                        veLai();
+
+                    } else {
+                        Toast.makeText(
+                                this,
+                                "Khoảng thời gian tối đa là 3 tháng",
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+
+                },
+                ngayMacDinh.get(Calendar.YEAR),
+                ngayMacDinh.get(Calendar.MONTH),
+                ngayMacDinh.get(Calendar.DAY_OF_MONTH)
+        );
+
+        dialog.getDatePicker().setMinDate(
+                ngayBatDauTuyChinh.getTimeInMillis()
+        );
+
+        dialog.getDatePicker().setMaxDate(
+                ngayMax.getTimeInMillis()
+        );
+
+        dialog.setTitle("Chọn ngày kết thúc");
+        dialog.show();
+    }
     // ------------------------------------------------------------------
     //  Bộ lọc: ví và công tắc Chi / Thu
     // ------------------------------------------------------------------
